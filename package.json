@@ -1,0 +1,29 @@
+{
+    "name": "test-framework-cli",
+    "version": "1.0.0",
+    "description": "A CLI tool for managing test frameworks",
+    "main": "index.js",
+    "bin": {
+        "create-test-project": "./bin/cli.js"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "cypress",
+        "playwright",
+        "pom",
+        "som",
+        "testing",
+        "cli"
+    ],
+    "author": "Nero James Ridder",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "5.6.2",
+        "commander": "11.0.0",
+        "inquirer": "9.2.7",
+        "ora": "6.1.2",
+        "fs-extra":"11.3.2"
+    }
+}
