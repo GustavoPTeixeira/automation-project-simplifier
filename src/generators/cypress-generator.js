@@ -1,11 +1,11 @@
 const fs = require('fs-extra')
 const path = require('path')
-const { generatePackageJson } = require('./templates/package-json')
-const { generateCypressConfig } = require('./templates/cypress-config')
-const { generatePageObject } = require('./templates/page-object')
-const { generateServiceObject } = require('./templates/service-object')
-const { generateFrontendTest } = require('./templates/frontend-test')
-const { generateBackendTest } = require('./templates/backend-test')
+const { generatePackageJson } = require('../templates/package-json')
+const { generateCypressConfig } = require('../templates/cypress-config.js')
+const { generatePageObject } = require('../templates/page-object')
+const { generateServiceObject } = require('../templates/service-object')
+const { generateFrontendTest } = require('../templates/frontend-test')
+const { generateBackendTest } = require('../templates/backend-test')
 
 async function createCypressProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples } = options
