@@ -6,7 +6,6 @@ const { generatePageObject } = require('../templates/page-object');
 const { generateServiceObject } = require('../templates/service-object');
 const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
-const { generateGitHubActions } = require('../templates/github-actions');
 
 async function createPlaywrightProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples } = options;
@@ -14,7 +13,7 @@ async function createPlaywrightProject(projectPath, options){
 
     const directories = [
         'tests',
-        'fixstures'
+        'fixtures'
     ];
 
     if(testTypes.includes('frontend')){

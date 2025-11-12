@@ -18,11 +18,11 @@ async function createCypressProject(projectPath, options){
     ];
 
     if(testTypes.includes('frontend')){
-        directories.push('cypress/page-objects')
+        directories.push('cypress/pages')
     }
 
     if(testTypes.includes('backend')){
-        directories.push('cypress/service-objects')
+        directories.push('cypress/services')
     }
 
     for(const dir of directories){

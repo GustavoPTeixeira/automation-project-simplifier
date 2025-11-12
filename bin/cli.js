@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
 const { Command } = require('commander');
-const inquirer = require('inquirer');
 const path = require('path');
-const ora = require('ora');
-const chalk = require('chalk');
 const { createCypressProject } = require('../src/generators/cypress-generator');
 const { createPlaywrightProject } = require('../src/generators/playwright-generator');
 
@@ -20,6 +17,10 @@ program
     .description('Criar um novo projeto de testes automatizados')
     .argument('<project-name>', 'Nome do projeto a ser criado')
     .action(async (projectName) => {
+        const inquirer = (await import('inquirer')).default;
+        const chalk = (await import('chalk')).default;
+        const ora = (await import('ora')).default;
+
         const answers = await inquirer.prompt([
             {
                 type: 'list',
