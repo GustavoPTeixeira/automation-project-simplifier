@@ -4,7 +4,7 @@
     "description": "A CLI tool for managing test frameworks",
     "main": "index.js",
     "bin": {
-        "create-test-project": "./bin/cli.js"
+        "automation-simplifier": "./bin/cli.js"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
