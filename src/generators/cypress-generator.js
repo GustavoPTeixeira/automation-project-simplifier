@@ -39,7 +39,7 @@ async function createCypressProject(projectPath, options){
     await fs.writeJson(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 })
 
     const configFile = `cypress.config.${isTS ? 'ts' : 'js'}`;
-    const cypressConfig = generateCypressConfig(language, testTypes);
+    const cypressConfig = generateCypressConfig(language);
     await fs.writeFile(path.join(projectPath, configFile), cypressConfig);
 
     if(isTS){
@@ -48,7 +48,7 @@ async function createCypressProject(projectPath, options){
                 target: "ES2020",
                 lib: ["ES2020", "DOM"],
                 types: ["cypress", "node"],
-                module: "commonJS",
+                module: "commonjs",
                 moduleResolution: "node",
                 esModuleInterop: true,
                 resolveJsonModule: true,
@@ -61,19 +61,32 @@ async function createCypressProject(projectPath, options){
     }
 
     const supportFile = `cypress/support/e2e.${isTS ? 'ts' : 'js'}`;
-    const supportContent = isTS ? `// Cypress support file\nimport './commands';\n` : `// Cypress support file\nimport './commands';\n`
+    const supportContent = `// Cypress support file\nimport './commands';\n`;
     await fs.writeFile(path.join(projectPath, supportFile), supportContent);
     
     const commandsFile = `cypress/support/commands.${isTS ? 'ts' : 'js'}`;
-    const commandsContents = `Cypress.Commands.add('login', (username${isTS ? ': string' : ''}, password${isTS ? ': string' : ''}) => {
-        cy.session([username, password], () => {
-          cy.visit('/login');
-          cy.get('[data-cy="username"]').type(username);
-          cy.get('[data-cy="password"]').type(password);
-          cy.get('[data-cy="login-button"]').click();
-          cy.url().should('not.include', '/login');
-        });
-      })`;
+    const loginCommand = `Cypress.Commands.add('login', (username${isTS ? ': string' : ''}, password${isTS ? ': string' : ''}) => {
+  cy.session([username, password], () => {
+    cy.visit('/login');
+    cy.get('[data-cy="username"]').type(username);
+    cy.get('[data-cy="password"]').type(password);
+    cy.get('[data-cy="login-button"]').click();
+    cy.url().should('not.include', '/login');
+  });
+});
+`;
+    const loginTypes = `declare global {
+  namespace Cypress {
+    interface Chainable {
+      login(username: string, password: string): Chainable<void>;
+    }
+  }
+}
+
+export {};
+
+`;
+    const commandsContents = (isTS ? loginTypes : '') + loginCommand;
     await fs.writeFile(path.join(projectPath, commandsFile), commandsContents);
 
     if(includeExamples){
@@ -105,27 +118,27 @@ async function createCypressProject(projectPath, options){
     }
     await fs.writeJson(path.join(projectPath, 'cypress/fixtures/users.json'), fixtureExamplo, { spaces: 2 });
 
-    const gitignore = `
-    node_modules
-    cypress/videos
-    cypress/screenshots
-    cypress/downloads
-    .env
-    *.log
-    dist/
-    .DS_Store
-    `;
+    const gitignore = `node_modules/
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+.env
+*.log
+dist/
+.DS_Store
+`;
     await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 
-    const envExample = `
-    # URL base da aplicação
-    CYPRESS_BASE_URL=http://localhost:3000
-    # URL base da API
-    CYPRESS_API_URL=http://localhost:3000/api
-    # Credenciais de teste
-    TEST_USERNAME=testuser
-    TEST_PASSWORD=password123
-    `;
+    const envExample = `# URL base da aplicação
+CYPRESS_BASE_URL=http://localhost:3000
+
+# URL base da API
+CYPRESS_API_URL=http://localhost:3000/api
+
+# Credenciais de teste
+TEST_USERNAME=testuser
+TEST_PASSWORD=password123
+`;
     await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
       
 }

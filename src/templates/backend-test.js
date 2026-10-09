@@ -5,7 +5,7 @@ function generateBackendTest(language, framework) {
     if (framework === 'cypress') {
       return `
   // cypress/e2e/api/users.cy.${ext}
-  import { UserService } from '../../services/UserService.${ext}';
+  import { UserService } from '../../services/UserService';
   
   describe('API - Usuários', () => {
     const userService = new UserService();
@@ -32,7 +32,7 @@ function generateBackendTest(language, framework) {
       return `
   // tests/api/users.spec.${ext}
   import { test, expect } from '@playwright/test';
-  import { UserService } from '../../services/UserService.${ext}';
+  import { UserService } from '../../services/UserService';
   
   test.describe.serial('API - Usuários', () => {
     let userService${isTS ? ': UserService' : ''};

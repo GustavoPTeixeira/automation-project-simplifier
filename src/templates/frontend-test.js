@@ -5,7 +5,7 @@ function generateFrontendTest(language, framework) {
     if (framework === 'cypress') {
       return `
   // cypress/e2e/login-example.cy.${ext}
-  import { LoginPage } from '../pages/LoginPage.${ext}';
+  import { LoginPage } from '../pages/LoginPage';
   
   describe('Login', () => {
     const loginPage = new LoginPage();
@@ -29,7 +29,7 @@ function generateFrontendTest(language, framework) {
       return `
   // tests/login-example.spec.${ext}
   import { test, expect } from '@playwright/test';
-  import { LoginPage } from '../pages/LoginPage.${ext}';
+  import { LoginPage } from '../pages/LoginPage';
   
   test.describe('Login', () => {
     

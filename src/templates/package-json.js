@@ -22,7 +22,7 @@ function generatePackageJson(options){
             'test:chrome': 'cypress run --browser chrome',
         }
         if(testTypes.includes('frontend')){
-            basePackage.scripts['test:ui'] = 'cypress run --spec "cypress/e2e/**/*.cy.*" --exclude "**/api/**"';
+            basePackage.scripts['test:ui'] = 'cypress run --spec "cypress/e2e/*.cy.*"';
         }
 
         if(testTypes.includes('backend')){
@@ -30,8 +30,8 @@ function generatePackageJson(options){
         }
 
         basePackage.devDependencies = {
-            'cypress': '^12.0.0',
-            'dotenv': '^16.0.0'
+            'cypress': '^16.0.0',
+            'dotenv': '^18.0.0'
         };
 
         if(isTS){
@@ -61,6 +61,7 @@ function generatePackageJson(options){
 
           if (isTS) {
             basePackage.devDependencies['typescript'] = '^5.3.3';
+            basePackage.devDependencies['@types/node'] = '^20.10.0';
           }
     }
 

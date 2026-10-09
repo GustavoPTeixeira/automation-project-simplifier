@@ -37,7 +37,7 @@ async function createPlaywrightProject(projectPath, options){
     await fs.writeJson(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
 
     const configFile = `playwright.config.${isTS ? 'ts' : 'js'}`;
-    const playwrightConfig = generatePlaywrightConfig(language, testTypes);
+    const playwrightConfig = generatePlaywrightConfig(language);
     await fs.writeFile(path.join(projectPath, configFile), playwrightConfig);
 
     if(isTS){
@@ -63,14 +63,11 @@ async function createPlaywrightProject(projectPath, options){
           };
           await fs.writeJson(path.join(projectPath, 'tsconfig.json'), tsConfig, { spaces: 2 });  
     }
-
-    const utilsDir = 'utils';
-    await fs.ensureDir(path.join(projectPath, utilsDir));
     
     if(includeExamples){
         if(testTypes.includes('frontend')){
             const pageObjectFile = `pages/LoginPage.${isTS ? 'ts' : 'js'}`;
-            const pageObjectContent = generatePageObject(language, 'plawyright');
+            const pageObjectContent = generatePageObject(language, 'playwright');
             await fs.writeFile(path.join(projectPath, pageObjectFile), pageObjectContent);
 
             const frontendTestFile = `tests/login.spec.${isTS ? 'ts' : 'js'}`;
@@ -94,11 +91,12 @@ async function createPlaywrightProject(projectPath, options){
     const fixtureFile = `fixtures/users.${isTS ? 'ts' : 'json'}`;
     if(isTS){
         const fixtureContent = `export const users = [
-        { username: 'testuser', password: 'password123', email: 'test@example.com' }
-        { username: 'admin', password: 'admin123', email: 'admin@example.com' }
-        ]
-        export const testUser = users[0];
-        `;
+  { username: 'testuser', password: 'password123', email: 'test@example.com' },
+  { username: 'admin', password: 'admin123', email: 'admin@example.com' },
+];
+
+export const testUser = users[0];
+`;
         await fs.writeFile(path.join(projectPath, fixtureFile), fixtureContent);
     } else {
         const fixtureExample = {

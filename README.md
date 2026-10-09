@@ -10,53 +10,62 @@ This command-line utility was built to accelerate the initial setup of an automa
 
 * **Multi-Framework:** Choose between **Cypress** or **Playwright**.
 * **Multi-Language:** Full support for **TypeScript** or **JavaScript**.
-* **Hybrid Structure:** Generates a setup ready for both **Frontend (E2E)** and **Backend (API)** tests in the same project.
+* **Hybrid Structure:** Generates a setup ready for both **Frontend (UI)** and **Backend (API)** tests in the same project.
 * **Smart Boilerplate:**
     * Creates a `package.json` with the correct dependencies and scripts.
-    * Configures `cypress.config.js` / `playwright.config.js`.
+    * Configures `cypress.config.js` / `playwright.config.js` (or `.ts`).
     * Adds `tsconfig.json` (if TypeScript is selected).
     * Generates **Page Objects (POM)** and **Service Objects (SOM)** examples.
     * Includes a `.gitignore` and `.env.example` file.
 
 ## 📦 Installation
 
-To install and use this CLI globally on your machine:
+Install it globally from npm:
 
 ```bash
+npm install -g @nerojridder/test-framework-cli
+```
 
-# 0. For downloading it from npm, run this line 
-npm install -g test-framework-cli
+Or, to run it from a local clone of this repository:
 
-# 1. In this project's root, create a symbolic link
+```bash
+npm install
 npm link
+```
 
-# 2. Now you can use the "automation-simplifier" command anywhere
+Either way, the command is `automation-simplifier`.
+
+## 🚀 Usage
+
+```bash
 automation-simplifier create <your-project-name>
+```
 
-$ create-test-project create my-test-project
+The CLI prompts (in Portuguese) for:
 
-? Which framework would you like to use?
-❯ cypress
-  playwright
+1. The test framework: `cypress` or `playwright`.
+2. The language: `javascript` or `typescript`.
+3. The test types: `Frontend (UI)` and/or `Backend (API)` (at least one is required).
+4. Whether to include example files (POM/SOM and tests).
 
-? Which language do you prefer?
-❯ typescript
-  javascript
+# You can also pass flags directly to skip prompts:
+automation-simplifier create <your-project-name> --framework playwright --language typescript --test-types frontend,backend --examples
 
-? What types of testing will you include? (Use Space to select)
-❯ ◉ Frontend (E2E)
-  ◉ Backend (API)
+Then install the generated project's dependencies:
 
-? Would you like to include example files (POM/SOM and tests)? (Y/n)
-❯ Yes
-
-🚀 Creating your project <your-project-name>...
-🎉 Successfully created project <your-project-name>!
-
-# After the project is created, don't forget to install its dependencies:
-cd my-test-project
+```bash
+cd <your-project-name>
 npm install
 ```
 
+## 🧪 Development
 
+```bash
+npm test
+```
 
+Runs a smoke test that generates all four framework/language combinations and checks the output.
+
+## 📄 License
+
+MIT

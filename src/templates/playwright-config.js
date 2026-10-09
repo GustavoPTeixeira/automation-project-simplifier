@@ -1,36 +1,36 @@
-function generatePlaywrightConfig(language, testTypes) {
+function generatePlaywrightConfig(language) {
     const isTS = language === 'typescript';
-    const importType = isTS ? `import type { PlaywrightTestConfig } from '@playwright/test';` : `/** @type {import('@playwright/test').PlaywrightTestConfig} */`;
-    const importDotenv = isTS ? `import 'dotenv/config';` : `require('dotenv').config();`;
-    const exportType = isTS ? `export default config;` : `module.exports = config;`;
 
-    return `
-    ${importType}
-    const { devices } = require('@playwright/test');
-    ${importDotenv}
+    const header = isTS
+        ? `import 'dotenv/config';
+import { defineConfig, devices } from '@playwright/test';
+`
+        : `require('dotenv').config();
+const { defineConfig, devices } = require('@playwright/test');
+`;
 
-    const config = {
-        testDir: './tests',
-        timeout: 30000,
-        expect: {
-            timeout: 5000
-        },
-        fullyParallel: true,
-        forbidOnly: !!process.env.CI,
-        retries: process.env.CI ? 2 : 0,
-        workers: process.env.CI ? 1 : undefined,
-        reporter: 'html',
+    const exportStatement = isTS ? 'export default defineConfig({' : 'module.exports = defineConfig({';
 
-        use: {
-            baseURL: process.env.BASE_URL || 'http://localhost:3000',
-            actionTimeout: 0,
-            trace: 'on-first-retry',
-            extraHTTPHeaders: {
-                'Accept': 'application/json',
-            },
-        },
+    return `${header}
+${exportStatement}
+  testDir: './tests',
+  timeout: 30000,
+  expect: {
+    timeout: 5000,
+  },
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
 
-        projects: [
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    actionTimeout: 0,
+    trace: 'on-first-retry',
+  },
+
+  projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
@@ -43,13 +43,11 @@ function generatePlaywrightConfig(language, testTypes) {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-],
+  ],
 
-    outputDir: 'test-results/',
-    };
-
-    ${exportType}
-    `
+  outputDir: 'test-results/',
+});
+`;
 }
 
 module.exports = { generatePlaywrightConfig };
