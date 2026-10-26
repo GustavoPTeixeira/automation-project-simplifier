@@ -1,8 +1,8 @@
 function generatePageObject(language, framework) {
-    const isTS = language === 'typescript';
-  
-    if (framework === 'cypress') {
-      return `
+  const isTS = language === 'typescript';
+
+  if (framework === 'cypress') {
+    return `
   // cypress/pages/LoginPage.${isTS ? 'ts' : 'js'}
   ${isTS ? `
   export class LoginPage {
@@ -42,10 +42,10 @@ function generatePageObject(language, framework) {
   }
   `}
   `;
-    }
-  
-    if (framework === 'playwright') {
-      return `
+  }
+
+  if (framework === 'playwright') {
+    return `
   // pages/LoginPage.${isTS ? 'ts' : 'js'}
   ${isTS ? `
   import { type Page, type Locator, expect } from '@playwright/test';
@@ -106,9 +106,63 @@ function generatePageObject(language, framework) {
   }
   `}
   `;
-    }
-  
-    return '// Framework não suportado';
+  }
+
+  if (framework === 'webdriverio') {
+    return `
+// pages/LoginPage.${isTS ? 'ts' : 'js'}
+${isTS ? `
+export class LoginPage {
+  get usernameInput() {
+    return $('[data-cy="username"]');
+  }
+  get passwordInput() {
+    return $('[data-cy="password"]');
+  }
+  get loginButton() {
+    return $('[data-cy="login-button"]');
+  }
+  async visit(): Promise<void> {
+    await browser.url('/login');
+  }
+  async fillUsername(username: string): Promise<void> {
+    await this.usernameInput.setValue(username);
+  }
+  async fillPassword(password: string): Promise<void> {
+    await this.passwordInput.setValue(password);
+  }
+  async submit(): Promise<void> {
+    await this.loginButton.click();
+  }
+}
+` : `
+export class LoginPage {
+  get usernameInput() {
+    return $('[data-cy="username"]');
+  }
+  get passwordInput() {
+    return $('[data-cy="password"]');
+  }
+  get loginButton() {
+    return $('[data-cy="login-button"]');
+  }
+  async visit() {
+    await browser.url('/login');
+  }
+  async fillUsername(username) {
+    await this.usernameInput.setValue(username);
+  }
+  async fillPassword(password) {
+    await this.passwordInput.setValue(password);
+  }
+  async submit() {
+    await this.loginButton.click();
+  }
+}
+`}
+`;
+  }
+  return '// Framework não suportado';
 }
 
 module.exports = { generatePageObject };

@@ -1,9 +1,9 @@
 function generateServiceObject(language, framework) {
-    const isTS = language === 'typescript';
-  
-    if (framework === 'cypress') {
-      // Cypress usa 'cy.request'
-      return `
+  const isTS = language === 'typescript';
+
+  if (framework === 'cypress') {
+    // Cypress usa 'cy.request'
+    return `
   // cypress/services/UserService.${isTS ? 'ts' : 'js'}
   ${isTS ? `
   export class UserService {
@@ -41,11 +41,11 @@ function generateServiceObject(language, framework) {
   }
   `}
   `;
-    }
-  
-    if (framework === 'playwright') {
-      // Playwright usa APIRequestContext
-      return `
+  }
+
+  if (framework === 'playwright') {
+    // Playwright usa APIRequestContext
+    return `
   // services/UserService.${isTS ? 'ts' : 'js'}
   ${isTS ? `
   import { type APIRequestContext, type APIResponse } from '@playwright/test';
@@ -88,8 +88,48 @@ function generateServiceObject(language, framework) {
   }
   `}
   `;
-    }
+  }
+
+  if (framework === 'webdriverio') {
+    return `
+  // services/UserService.${isTS ? 'ts' : 'js'}
+  ${isTS ? `
+  export class UserService {
+  readonly baseUrl: string;
+  constructor() {
+    this.baseUrl = process.env.API_URL || 'http://localhost:3000/api';
+  }
+  async getUsers(): Promise<Response> {
+    return fetch(\`\${this.baseUrl}/users\`);
+  }
+  async createUser(user: any): Promise<Response> {
+    return fetch(\`\${this.baseUrl}/users\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user),
+    });
+  }
+}
+` : `
+export class UserService {
+  constructor() {
+    this.baseUrl = process.env.API_URL || 'http://localhost:3000/api';
+  }
+  async getUsers() {
+    return fetch(\`\${this.baseUrl}/users\`);
+  }
+  async createUser(user) {
+    return fetch(\`\${this.baseUrl}/users\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user),
+    });
+  }
+}
+`}
+`;
+  }
     return '// Framework não suportado';
   }
-  
+
   module.exports = { generateServiceObject };

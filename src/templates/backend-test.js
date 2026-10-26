@@ -60,6 +60,30 @@ function generateBackendTest(language, framework) {
   });
   `;
     }
+
+     if (framework === 'webdriverio') {
+    return `
+// tests/specs/api/users.api.${ext}
+import assert from 'node:assert';
+import { UserService } from '../../../services/UserService';
+describe('API - Usuários', () => {
+  const userService = new UserService();
+  it('deve buscar lista de usuários', async () => {
+    const response = await userService.getUsers();
+    assert.strictEqual(response.status, 200);
+    const body = await response.json();
+    assert.ok(Array.isArray(body));
+  });
+  it('deve criar um novo usuário', async () => {
+    const newUser = { name: 'Nero', job: 'QA' };
+    const response = await userService.createUser(newUser);
+    assert.strictEqual(response.status, 201);
+    const body = await response.json();
+    assert.strictEqual(body.name, newUser.name);
+  });
+});
+`;
+  }
     return '// Framework não suportado';
   }
   

@@ -46,6 +46,23 @@ function generateFrontendTest(language, framework) {
   });
   `;
     }
+
+      if (framework === 'webdriverio') {
+    return `
+// tests/specs/login.e2e.${ext}
+import { LoginPage } from '../../pages/LoginPage';
+describe('Login', () => {
+  it('deve fazer login com sucesso', async () => {
+    const loginPage = new LoginPage();
+    await loginPage.visit();
+    await loginPage.fillUsername('testuser');
+    await loginPage.fillPassword('password123');
+    await loginPage.submit();
+    await expect(browser).toHaveUrl(expect.stringContaining('dashboard'));
+  });
+});
+`;
+  }
     return '// Framework não suportado';
   }
   
