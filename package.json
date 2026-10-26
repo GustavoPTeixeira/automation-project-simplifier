@@ -16,6 +16,8 @@
     "keywords": [
         "cypress",
         "playwright",
+        "webdriverio",
+        "wdio",
         "pom",
         "som",
         "testing",

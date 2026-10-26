@@ -63,6 +63,36 @@ function generatePackageJson(options){
             basePackage.devDependencies['typescript'] = '^5.3.3';
             basePackage.devDependencies['@types/node'] = '^20.10.0';
           }
+    } else if (framework === 'webdriverio'){
+        const configFile = `./wdio.conf.${isTS ? 'ts' : 'js'}`;
+
+        basePackage.scripts = {
+            'wdio': `wdio run ${configFile}`,
+            'test': `wdio run ${configFile}`,
+            'test:headed': `HEADED=true wdio run ${configFile}`,
+        };
+
+        if(testTypes.includes('frontend')) {
+            basePackage.scripts['test:ui'] = `wdio run ${configFile} --spec "tests/specs/*.e2e.*"`;
+        }
+
+        if(testTypes.includes('backend')){
+            basePackage.scripts['test:api'] = `wdio run ${configFile} --spec "tests/specs/api/*.api.*"`;
+        }
+
+        basePackage.devDependencies = {
+            '@wdio/cli': '^9.0.0',
+            '@wdio/local-runner': '^9.0.0',
+            '@wdio/mocha-framework': '^9.0.0',
+            '@wdio/spec-reporter': '^9.0.0',
+            'dotenv': '^16.4.5'
+        }
+
+        if(isTS){
+            basePackage.devDependencies['typescript'] = '^5.3.3';
+            basePackage.devDependencies['@types/node'] = '^20.10.0';
+            basePackage.devDependencies['ts-node'] = '^10.9.2';
+        }
     }
 
     return basePackage;

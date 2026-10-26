@@ -5,19 +5,20 @@ const fs = require('fs-extra');
 const path = require('path');
 const { createCypressProject } = require('../src/generators/cypress-generator');
 const { createPlaywrightProject } = require('../src/generators/playwright-generator');
+const { createWdioProject } = require('../src/generators/wdio-generator');
 
 const program = new Command();
 
 program
     .version(require('../package.json').version)
-    .description('CLI para geração de testes automatizados em Playwright ou Cypress possibilitando o uso da estrutura POM e SOM')
+    .description('CLI para geração de testes automatizados em Playwright, Cypress ou WebdriverIO possibilitando o uso da estrutura POM e SOM')
 
 program
     .command('create')
     .alias('new')
     .description('Criar um novo projeto de testes automatizados')
     .argument('<project-name>', 'Nome do projeto a ser criado')
-    .option('-f, --framework <framework>', 'Framework de teste (cypress, playwright)')
+    .option('-f, --framework <framework>', 'Framework de teste (cypress, playwright, webdriverio)')
     .option('-l, --language <language>', 'Linguagem (javascript, typescript)')
     .option('-t, --test-types <types>', 'Tipos de testes separados por vírgula (frontend, backend)')
     .option('--examples', 'Incluir exemplos de testes')
@@ -35,8 +36,8 @@ program
                 return;
             }
         }
-        if(cmdOptions.framework && !['cypress', 'playwright'].includes(cmdOptions.framework.toLowerCase())){
-                console.error(chalk.red(`Framework inválido: "${cmdOptions.framework}". Escolha "cypress" ou "playwright".`));
+        if(cmdOptions.framework && !['cypress', 'playwright', 'webdriverio'].includes(cmdOptions.framework.toLowerCase())){
+                console.error(chalk.red(`Framework inválido: "${cmdOptions.framework}". Escolha "cypress", "playwright" ou "webdriverio".`));
                 process.exitCode = 1;
                 return;
         }
@@ -65,7 +66,7 @@ program
                 type: 'list',
                 name: 'framework',
                 message: 'Selecione o framework de teste:',
-                choices: ['cypress', 'playwright'],
+                choices: ['cypress', 'playwright', 'webdriverio'],
                 when: () => !cmdOptions.framework,
             },
             {
@@ -118,6 +119,8 @@ program
                 await createCypressProject(projectPath, options);
             } else if(framework === 'playwright'){
                 await createPlaywrightProject(projectPath, options);
+            } else if(framework === 'webdriverio'){
+                await createWdioProject(projectPath, options);
             }
 
             spinner.succeed(chalk.green(`Projeto ${chalk.bold(projectName)} criado com sucesso em ${chalk.italic(projectPath)}`));

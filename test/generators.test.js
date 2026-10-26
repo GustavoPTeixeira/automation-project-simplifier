@@ -6,12 +6,15 @@ const fs = require('fs-extra');
 
 const { createCypressProject } = require('../src/generators/cypress-generator');
 const { createPlaywrightProject } = require('../src/generators/playwright-generator');
+const { createWdioProject } = require('../src/generators/wdio-generator');
 
 const combos = [
     ['cypress', createCypressProject, 'typescript'],
     ['cypress', createCypressProject, 'javascript'],
     ['playwright', createPlaywrightProject, 'typescript'],
     ['playwright', createPlaywrightProject, 'javascript'],
+    ['webdriverio', createWdioProject, 'typescript'],
+    ['webdriverio', createWdioProject, 'javascript'],
 ];
 
 for (const [framework, create, language] of combos) {
