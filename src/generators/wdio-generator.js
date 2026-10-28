@@ -8,9 +8,10 @@ const { generateBaseService } = require('../templates/base-service');
 const { generateServiceObject } = require('../templates/service-object');
 const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
+const { generateCiWorkflow } = require('../templates/ci-workflow');
 
 async function createWdioProject(projectPath, options){
-    const { projectName, testTypes, language, includeExamples } = options;
+    const { projectName, testTypes, language, includeExamples, includeCi } = options;
     const isTS = language === 'typescript';
 
     const directories = [
@@ -143,6 +144,14 @@ TEST_PASSWORD=password123
 HEADED=false
 `;
     await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
+
+    if (includeCi) {
+        const workflowDir = '.github/workflows';
+        await fs.ensureDir(path.join(projectPath, workflowDir));
+        const workflowFile = `${workflowDir}/e2e.yml`;
+        const workflowContent = generateCiWorkflow('webdriverio');
+        await fs.writeFile(path.join(projectPath, workflowFile), workflowContent);
+    }
 }
 
 module.exports = { createWdioProject };

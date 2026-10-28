@@ -23,6 +23,8 @@ program
     .option('-t, --test-types <types>', 'Tipos de testes separados por vírgula (frontend, backend)')
     .option('--examples', 'Incluir exemplos de testes')
     .option('--no-examples', 'Não incluir exemplos de testes')
+    .option('--ci', 'Incluir pipeline de CI/CD (GitHub Actions)')
+    .option('--no-ci', 'Não incluir pipeline de CI/CD')
     .action(async (projectName, cmdOptions) => {
         const inquirer = (await import('inquirer')).default;
         const chalk = (await import('chalk')).default;
@@ -94,6 +96,13 @@ program
             },
             {
                 type: 'confirm',
+                name: 'includeCi',
+                message: 'Deseja incluir pipeline de CI/CD (GitHub Actions)?',
+                default: true,
+                when: () => cmdOptions.ci === undefined,
+            },
+            {
+                type: 'confirm',
                 name: 'includeExamples',
                 message: 'Deseja incluir exemplos de testes no projeto?',
                 default: true,
@@ -105,12 +114,13 @@ program
         const language = (cmdOptions.language || answers.language).toLowerCase();
         const testTypes = parsedTestTypes || answers.testTypes;
         const includeExamples = cmdOptions.examples !== undefined ? cmdOptions.examples : answers.includeExamples;
-        
+        const includeCi = cmdOptions.ci !== undefined ? cmdOptions.ci : answers.includeCi;
         const options = {
             projectName: projectName,
             testTypes: testTypes,
             language: language,
             includeExamples: includeExamples,
+            includeCi: includeCi,
         }
         const spinner = ora(`Criando seu projeto ${chalk.bold(projectName)}, aguarde um momento... `).start();
 

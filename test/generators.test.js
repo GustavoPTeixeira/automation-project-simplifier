@@ -26,6 +26,7 @@ for (const [framework, create, language] of combos) {
                 testTypes: ['frontend', 'backend'],
                 language,
                 includeExamples: true,
+                includeCi: true,
             });
 
             const files = (await fs.readdir(dir, { recursive: true }))
@@ -41,9 +42,11 @@ for (const [framework, create, language] of combos) {
 
             const gitignore = await fs.readFile(path.join(dir, '.gitignore'), 'utf8');
             assert.ok(!/^\s+\S/m.test(gitignore), '.gitignore has indented lines');
+
+            const workflow = await fs.readFile(path.join(dir, '.github', 'workflows', 'e2e.yml'), 'utf8');
+            assert.ok(workflow.includes('name: End-to-End Tests'), 'CI workflow missing name');
         } finally {
             await fs.remove(dir);
         }
     });
 }
-
