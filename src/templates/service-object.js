@@ -2,134 +2,102 @@ function generateServiceObject(language, framework) {
   const isTS = language === 'typescript';
 
   if (framework === 'cypress') {
-    // Cypress usa 'cy.request'
     return `
-  // cypress/services/UserService.${isTS ? 'ts' : 'js'}
-  ${isTS ? `
-  export class UserService {
-    getUsers() {
-      return cy.request({
-        method: 'GET',
-        url: \`\${Cypress.env('API_URL')}/users\`,
-      });
-    }
-  
-    createUser(user: any) {
-      return cy.request({
-        method: 'POST',
-        url: \`\${Cypress.env('API_URL')}/users\`,
-        body: user,
-      });
-    }
-  }
-  ` : `
-  export class UserService {
-    getUsers() {
-      return cy.request({
-        method: 'GET',
-        url: \`\${Cypress.env('API_URL')}/users\`,
-      });
-    }
-  
-    createUser(user) {
-      return cy.request({
-        method: 'POST',
-        url: \`\${Cypress.env('API_URL')}/users\`,
-        body: user,
-      });
-    }
-  }
-  `}
-  `;
+// cypress/services/UserService.${isTS ? 'ts' : 'js'}
+import { BaseService } from './BaseService';
+
+${isTS ? `
+export class UserService extends BaseService {
+  getUsers(): Cypress.Chainable<Cypress.Response<any>> {
+    return this.get('/users');
   }
 
-  if (framework === 'playwright') {
-    // Playwright usa APIRequestContext
-    return `
-  // services/UserService.${isTS ? 'ts' : 'js'}
-  ${isTS ? `
-  import { type APIRequestContext, type APIResponse } from '@playwright/test';
-  
-  export class UserService {
-    readonly request: APIRequestContext;
-    readonly baseUrl: string;
-  
-    constructor(request: APIRequestContext) {
-      this.request = request;
-      this.baseUrl = process.env.API_URL || 'http://localhost:3000/api';
-    }
-  
-    async getUsers(): Promise<APIResponse> {
-      return this.request.get(\`\${this.baseUrl}/users\`);
-    }
-  
-    async createUser(user: any): Promise<APIResponse> {
-      return this.request.post(\`\${this.baseUrl}/users\`, {
-        data: user,
-      });
-    }
-  }
-  ` : `
-  export class UserService {
-    constructor(request) {
-      this.request = request;
-      this.baseUrl = process.env.API_URL || 'http://localhost:3000/api';
-    }
-  
-    async getUsers() {
-      return this.request.get(\`\${this.baseUrl}/users\`);
-    }
-  
-    async createUser(user) {
-      return this.request.post(\`\${this.baseUrl}/users\`, {
-        data: user,
-      });
-    }
-  }
-  `}
-  `;
-  }
-
-  if (framework === 'webdriverio') {
-    return `
-  // services/UserService.${isTS ? 'ts' : 'js'}
-  ${isTS ? `
-  export class UserService {
-  readonly baseUrl: string;
-  constructor() {
-    this.baseUrl = process.env.API_URL || 'http://localhost:3000/api';
-  }
-  async getUsers(): Promise<Response> {
-    return fetch(\`\${this.baseUrl}/users\`);
-  }
-  async createUser(user: any): Promise<Response> {
-    return fetch(\`\${this.baseUrl}/users\`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user),
-    });
+  createUser(user: any): Cypress.Chainable<Cypress.Response<any>> {
+    return this.post('/users', user);
   }
 }
 ` : `
-export class UserService {
-  constructor() {
-    this.baseUrl = process.env.API_URL || 'http://localhost:3000/api';
+export class UserService extends BaseService {
+  getUsers() {
+    return this.get('/users');
   }
-  async getUsers() {
-    return fetch(\`\${this.baseUrl}/users\`);
-  }
-  async createUser(user) {
-    return fetch(\`\${this.baseUrl}/users\`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user),
-    });
+
+  createUser(user) {
+    return this.post('/users', user);
   }
 }
 `}
 `;
   }
-    return '// Framework não suportado';
+
+  if (framework === 'playwright') {
+    return `
+// services/UserService.${isTS ? 'ts' : 'js'}
+import { BaseService } from './BaseService';
+${isTS ? `
+import { type APIRequestContext, type APIResponse } from '@playwright/test';
+
+export class UserService extends BaseService {
+  constructor(request: APIRequestContext) {
+    super(request);
   }
 
-  module.exports = { generateServiceObject };
+  async getUsers(): Promise<APIResponse> {
+    return this.get('/users');
+  }
+
+  async createUser(user: any): Promise<APIResponse> {
+    return this.post('/users', user);
+  }
+}
+` : `
+export class UserService extends BaseService {
+  constructor(request) {
+    super(request);
+  }
+
+  async getUsers() {
+    return this.get('/users');
+  }
+
+  async createUser(user) {
+    return this.post('/users', user);
+  }
+}
+`}
+`;
+  }
+
+  if (framework === 'webdriverio') {
+    return `
+// services/UserService.${isTS ? 'ts' : 'js'}
+import { BaseService } from './BaseService';
+
+${isTS ? `
+export class UserService extends BaseService {
+  async getUsers(): Promise<Response> {
+    return this.get('/users');
+  }
+
+  async createUser(user: any): Promise<Response> {
+    return this.post('/users', user);
+  }
+}
+` : `
+export class UserService extends BaseService {
+  async getUsers() {
+    return this.get('/users');
+  }
+
+  async createUser(user) {
+    return this.post('/users', user);
+  }
+}
+`}
+`;
+  }
+
+  return '// Framework não suportado';
+}
+
+module.exports = { generateServiceObject };

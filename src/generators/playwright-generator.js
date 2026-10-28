@@ -2,7 +2,9 @@ const fs = require('fs-extra');
 const path = require('path');
 const { generatePackageJson } = require('../templates/package-json');
 const { generatePlaywrightConfig } = require('../templates/playwright-config');
+const { generateBasePage } = require('../templates/base-page');
 const { generatePageObject } = require('../templates/page-object');
+const { generateBaseService } = require('../templates/base-service');
 const { generateServiceObject } = require('../templates/service-object');
 const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
@@ -66,6 +68,10 @@ async function createPlaywrightProject(projectPath, options){
     
     if(includeExamples){
         if(testTypes.includes('frontend')){
+            const basePageFile = `pages/BasePage.${isTS ? 'ts' : 'js'}`;
+            const basePageContent = generateBasePage(language, 'playwright');
+            await fs.writeFile(path.join(projectPath, basePageFile), basePageContent);
+
             const pageObjectFile = `pages/LoginPage.${isTS ? 'ts' : 'js'}`;
             const pageObjectContent = generatePageObject(language, 'playwright');
             await fs.writeFile(path.join(projectPath, pageObjectFile), pageObjectContent);
@@ -76,6 +82,10 @@ async function createPlaywrightProject(projectPath, options){
         }
 
         if(testTypes.includes('backend')){
+            const baseServiceFile = `services/BaseService.${isTS ? 'ts' : 'js'}`;
+            const baseServiceContent = generateBaseService(language, 'playwright');
+            await fs.writeFile(path.join(projectPath, baseServiceFile), baseServiceContent);
+
             const serviceObjectFile = `services/UserService.${isTS ? 'ts' : 'js'}`;
             const serviceObjectContent = generateServiceObject(language, 'playwright');
             await fs.writeFile(path.join(projectPath, serviceObjectFile), serviceObjectContent);

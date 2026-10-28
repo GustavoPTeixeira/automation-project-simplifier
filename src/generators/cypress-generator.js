@@ -2,7 +2,9 @@ const fs = require('fs-extra')
 const path = require('path')
 const { generatePackageJson } = require('../templates/package-json')
 const { generateCypressConfig } = require('../templates/cypress-config.js')
+const { generateBasePage } = require('../templates/base-page')
 const { generatePageObject } = require('../templates/page-object')
+const { generateBaseService } = require('../templates/base-service')
 const { generateServiceObject } = require('../templates/service-object')
 const { generateFrontendTest } = require('../templates/frontend-test')
 const { generateBackendTest } = require('../templates/backend-test')
@@ -91,6 +93,10 @@ export {};
 
     if(includeExamples){
         if(testTypes.includes('frontend')){
+            const basePageFile = `cypress/pages/BasePage.${isTS ? 'ts' : 'js'}`;
+            const basePageContent = generateBasePage(language, 'cypress');
+            await fs.writeFile(path.join(projectPath, basePageFile), basePageContent);
+
             const pageObjectFile = `cypress/pages/LoginPage.${isTS ? 'ts' : 'js'}`;
             const pageObjectContent = generatePageObject(language, 'cypress');
             await fs.writeFile(path.join(projectPath, pageObjectFile), pageObjectContent);
@@ -101,6 +107,10 @@ export {};
         }
 
         if(testTypes.includes('backend')){
+            const baseServiceFile = `cypress/services/BaseService.${isTS ? 'ts' : 'js'}`;
+            const baseServiceContent = generateBaseService(language, 'cypress');
+            await fs.writeFile(path.join(projectPath, baseServiceFile), baseServiceContent);
+
             const serviceObjectFile = `cypress/services/UserService.${isTS ? 'ts' : 'js'}`;
             const serviceObjectContent = generateServiceObject(language, 'cypress');
             await fs.writeFile(path.join(projectPath, serviceObjectFile), serviceObjectContent);
