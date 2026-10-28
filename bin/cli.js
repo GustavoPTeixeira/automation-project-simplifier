@@ -23,7 +23,7 @@ program
     .option('-t, --test-types <types>', 'Tipos de testes separados por vírgula (frontend, backend)')
     .option('--examples', 'Incluir exemplos de testes')
     .option('--no-examples', 'Não incluir exemplos de testes')
-    .option('--ci', 'Incluir pipeline de CI/CD (GitHub Actions)')
+    .option('--ci <provider>', 'Provedor de CI/CD (github, gitlab, azure, bitbucket, jenkins, none)')
     .option('--no-ci', 'Não incluir pipeline de CI/CD')
     .action(async (projectName, cmdOptions) => {
         const inquirer = (await import('inquirer')).default;
@@ -58,11 +58,19 @@ program
                 .filter(Boolean);
             const invalid = parsedTestTypes.filter((t) => !['frontend', 'backend'].includes(t));
             if(invalid.length > 0 || parsedTestTypes.length === 0){
-                console.error(chalk.red(`Tipo(s) de teste inválido(s): "${cmdOptions.testTypes}". Escolha "fronten", "backend" ou "frontend,backend".`));
+                console.error(chalk.red(`Tipo(s) de teste inválido(s): "${cmdOptions.testTypes}". Escolha "frontend", "backend" ou "frontend,backend".`));
                 process.exitCode = 1;
                 return;
             }
         }
+
+        const validCiProviders = ['github', 'gitlab', 'azure', 'bitbucket', 'jenkins', 'none'];
+        if(cmdOptions.ci && typeof cmdOptions.ci === 'string' && !validCiProviders.includes(cmdOptions.ci.toLowerCase())){
+            console.error(chalk.red(`Provedor de CI/CD inválido: "${cmdOptions.ci}". Escolha entre: ${validCiProviders.join(', ')}.`));
+            process.exitCode = 1;
+            return;
+        }
+
         const answers = await inquirer.prompt([
             {
                 type: 'list',
@@ -95,10 +103,18 @@ program
                 },
             },
             {
-                type: 'confirm',
-                name: 'includeCi',
-                message: 'Deseja incluir pipeline de CI/CD (GitHub Actions)?',
-                default: true,
+                type: 'list',
+                name: 'ciProvider',
+                message: 'Selecione o provedor de CI/CD:',
+                choices: [
+                    { name: 'GitHub Actions', value: 'github' },
+                    { name: 'GitLab CI/CD', value: 'gitlab' },
+                    { name: 'Azure DevOps Pipelines', value: 'azure' },
+                    { name: 'Bitbucket Pipelines', value: 'bitbucket' },
+                    { name: 'Jenkins', value: 'jenkins' },
+                    { name: 'Nenhum', value: 'none' },
+                ],
+                default: 'github',
                 when: () => cmdOptions.ci === undefined,
             },
             {
@@ -114,14 +130,23 @@ program
         const language = (cmdOptions.language || answers.language).toLowerCase();
         const testTypes = parsedTestTypes || answers.testTypes;
         const includeExamples = cmdOptions.examples !== undefined ? cmdOptions.examples : answers.includeExamples;
-        const includeCi = cmdOptions.ci !== undefined ? cmdOptions.ci : answers.includeCi;
+        
+        let ciProvider = 'none';
+        if (cmdOptions.ci === false) {
+            ciProvider = 'none';
+        } else if (typeof cmdOptions.ci === 'string') {
+            ciProvider = cmdOptions.ci.toLowerCase();
+        } else if (answers.ciProvider) {
+            ciProvider = answers.ciProvider.toLowerCase();
+        }
+
         const options = {
             projectName: projectName,
             testTypes: testTypes,
             language: language,
             includeExamples: includeExamples,
-            includeCi: includeCi,
-        }
+            ciProvider: ciProvider,
+        };
         const spinner = ora(`Criando seu projeto ${chalk.bold(projectName)}, aguarde um momento... `).start();
 
         try{

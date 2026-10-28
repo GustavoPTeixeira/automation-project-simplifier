@@ -16,7 +16,7 @@ This command-line utility was built to accelerate the initial setup of an automa
     * Configures `cypress.config.js` / `playwright.config.js` / `wdio.conf.js` (or `.ts`).
     * Adds `tsconfig.json` (if TypeScript is selected).
     * Generates **Page Objects (POM)** and **Service Objects (SOM)** with extensible `BasePage` and `BaseService` foundation classes.
-    * Configures a **GitHub Actions CI/CD pipeline** (`.github/workflows/e2e.yml`).
+    * Configures **CI/CD pipelines** supporting **GitHub Actions**, **GitLab CI/CD**, **Azure DevOps**, **Bitbucket Pipelines**, or **Jenkins**.
     * Includes `.gitignore` and `.env.example` files.
 
 ## 📦 Installation
@@ -47,14 +47,16 @@ The CLI prompts (in Portuguese) for:
 1. The test framework: `cypress`, `playwright`, or `webdriverio`.
 2. The language: `javascript` or `typescript`.
 3. The test types: `Frontend (UI)` and/or `Backend (API)` (at least one is required).
-4. Whether to include a GitHub Actions CI/CD pipeline.
+4. The CI/CD provider: `GitHub Actions`, `GitLab CI/CD`, `Azure DevOps`, `Bitbucket Pipelines`, `Jenkins`, or `None`.
 5. Whether to include example files (POM/SOM and tests).
 
 You can also pass flags directly to skip prompts:
 
 ```bash
-automation-simplifier create <your-project-name> --framework playwright --language typescript --test-types frontend,backend --examples --ci
+automation-simplifier create <your-project-name> --framework playwright --language typescript --test-types frontend,backend --ci github --examples
 ```
+
+Available `--ci` options: `github`, `gitlab`, `azure`, `bitbucket`, `jenkins`, `none` (or `--no-ci`).
 
 Then install the generated project's dependencies:
 
@@ -69,7 +71,7 @@ npm install
 npm test
 ```
 
-Runs a smoke test that generates all framework/language combinations, verifying directory structures, syntax, and workflows.
+Runs the automated test suite verifying all framework/language combinations and all 5 CI/CD provider templates.
 
 ## 📄 License
 

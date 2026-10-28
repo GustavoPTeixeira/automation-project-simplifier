@@ -7,6 +7,7 @@ const fs = require('fs-extra');
 const { createCypressProject } = require('../src/generators/cypress-generator');
 const { createPlaywrightProject } = require('../src/generators/playwright-generator');
 const { createWdioProject } = require('../src/generators/wdio-generator');
+const { generateCiWorkflow } = require('../src/templates/ci-workflow');
 
 const combos = [
     ['cypress', createCypressProject, 'typescript'],
@@ -26,7 +27,7 @@ for (const [framework, create, language] of combos) {
                 testTypes: ['frontend', 'backend'],
                 language,
                 includeExamples: true,
-                includeCi: true,
+                ciProvider: 'github',
             });
 
             const files = (await fs.readdir(dir, { recursive: true }))
@@ -50,3 +51,16 @@ for (const [framework, create, language] of combos) {
         }
     });
 }
+
+test('CI workflow generator supports all 5 providers', () => {
+    const providers = ['github', 'gitlab', 'azure', 'bitbucket', 'jenkins'];
+    const frameworks = ['playwright', 'cypress', 'webdriverio'];
+
+    for (const provider of providers) {
+        for (const framework of frameworks) {
+            const { filePath, content } = generateCiWorkflow(provider, framework);
+            assert.ok(filePath, `Missing filePath for ${provider} + ${framework}`);
+            assert.ok(content && content.length > 20, `Missing content for ${provider} + ${framework}`);
+        }
+    }
+});

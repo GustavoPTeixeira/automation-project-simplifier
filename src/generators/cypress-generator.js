@@ -11,7 +11,7 @@ const { generateBackendTest } = require('../templates/backend-test')
 const { generateCiWorkflow } = require('../templates/ci-workflow')
 
 async function createCypressProject(projectPath, options){
-    const { projectName, testTypes, language, includeExamples, includeCi } = options
+    const { projectName, testTypes, language, includeExamples, ciProvider } = options
     const isTS = language === 'typescript'
 
     const directories = [
@@ -152,12 +152,12 @@ TEST_PASSWORD=password123
 `;
     await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
 
-    if (includeCi) {
-        const workflowDir = '.github/workflows';
-        await fs.ensureDir(path.join(projectPath, workflowDir));
-        const workflowFile = `${workflowDir}/e2e.yml`;
-        const workflowContent = generateCiWorkflow('cypress');
-        await fs.writeFile(path.join(projectPath, workflowFile), workflowContent);
+    if (ciProvider && ciProvider !== 'none') {
+        const { filePath, content } = generateCiWorkflow(ciProvider, 'cypress');
+        if (filePath && content) {
+            await fs.ensureDir(path.join(projectPath, path.dirname(filePath)));
+            await fs.writeFile(path.join(projectPath, filePath), content);
+        }
     }
 }
 
