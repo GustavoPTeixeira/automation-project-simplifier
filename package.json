@@ -1,6 +1,6 @@
 {
     "name": "@nerojridder/test-framework-cli",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "A CLI tool for managing test frameworks",
     "bin": {
         "automation-simplifier": "./bin/cli.js"
@@ -8,7 +8,8 @@
     "files": [
         "bin/",
         "src/",
-        "README.md"
+        "README.md",
+        "LICENSE"
     ],
     "scripts": {
         "test": "node --test \"test/*.test.js\""
