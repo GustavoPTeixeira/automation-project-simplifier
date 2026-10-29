@@ -11,6 +11,7 @@ const { generateBackendTest } = require('../templates/backend-test');
 const { generateCiWorkflow } = require('../templates/ci-workflow');
 const { generateEnvContent } = require('../templates/env-config');
 const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } = require('../templates/lint-config');
+const { generateDataFactory } = require('../templates/data-factory');
 
 async function createPlaywrightProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options;
@@ -120,6 +121,9 @@ export const testUser = users[0];
         };
         await fs.writeJson(path.join(projectPath, fixtureFile), fixtureExample, { spaces: 2 });
     }
+
+    const factoryFile = `fixtures/user-factory.${isTS ? 'ts' : 'js'}`;
+    await fs.writeFile(path.join(projectPath, factoryFile), generateDataFactory(language));
     const gitignore = `node_modules/
 test-results/
 playwright-report/

@@ -60,6 +60,7 @@ for (const [framework, create, language] of combos) {
             assert.ok(pkg.devDependencies['eslint'], 'missing eslint dependency');
             assert.ok(pkg.devDependencies['prettier'], 'missing prettier dependency');
             assert.ok(pkg.devDependencies['eslint-config-prettier'], 'missing eslint-config-prettier dependency');
+            assert.ok(pkg.devDependencies['@faker-js/faker'], 'missing @faker-js/faker dependency');
 
             if (language === 'typescript') {
                 assert.ok(pkg.devDependencies['@typescript-eslint/parser'], 'missing @typescript-eslint/parser');
@@ -69,6 +70,11 @@ for (const [framework, create, language] of combos) {
             assert.ok(await fs.pathExists(path.join(dir, '.eslintrc.json')), 'missing .eslintrc.json');
             assert.ok(await fs.pathExists(path.join(dir, '.prettierrc')), 'missing .prettierrc');
             assert.ok(await fs.pathExists(path.join(dir, '.prettierignore')), 'missing .prettierignore');
+
+            const factoryRelPath = framework === 'cypress'
+                ? `cypress/fixtures/user-factory.${language === 'typescript' ? 'ts' : 'js'}`
+                : `fixtures/user-factory.${language === 'typescript' ? 'ts' : 'js'}`;
+            assert.ok(await fs.pathExists(path.join(dir, factoryRelPath)), `missing ${factoryRelPath}`);
 
             if (framework === 'playwright') {
                 const cfg = await fs.readFile(path.join(dir, `playwright.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
