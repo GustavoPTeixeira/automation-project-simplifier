@@ -15,7 +15,7 @@ const { generateDataFactory } = require('../templates/data-factory');
 const { generateMcpConfig, generateAiInstructions } = require('../templates/mcp-config');
 
 async function createPlaywrightProject(projectPath, options){
-    const { projectName, testTypes, language, includeExamples, ciProvider } = options;
+    const { projectName, testTypes, language, includeExamples, ciProvider, dependencies, devDependencies } = options;
     const isTS = language === 'typescript';
 
     const directories = [
@@ -39,7 +39,9 @@ async function createPlaywrightProject(projectPath, options){
         projectName,
         framework: 'playwright',
         language,
-        testTypes
+        testTypes,
+        dependencies,
+        devDependencies
     });
     await fs.writeJson(path.join(projectPath, 'package.json'), packageJson, { spaces: 2 });
 

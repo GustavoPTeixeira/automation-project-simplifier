@@ -122,3 +122,26 @@ test('CI workflow generator supports all 5 providers', () => {
         }
     }
 });
+
+test('generators support custom dependencies and devDependencies', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'gen-deps-'));
+    try {
+        await createPlaywrightProject(dir, {
+            projectName: 'sample-custom-deps',
+            testTypes: ['frontend'],
+            language: 'typescript',
+            includeExamples: false,
+            ciProvider: 'none',
+            dependencies: 'axios lodash@^4.17.21',
+            devDependencies: 'allure-playwright @types/lodash',
+        });
+
+        const pkg = await fs.readJson(path.join(dir, 'package.json'));
+        assert.equal(pkg.dependencies['axios'], 'latest');
+        assert.equal(pkg.dependencies['lodash'], '^4.17.21');
+        assert.equal(pkg.devDependencies['allure-playwright'], 'latest');
+        assert.equal(pkg.devDependencies['@types/lodash'], 'latest');
+    } finally {
+        await fs.remove(dir);
+    }
+});

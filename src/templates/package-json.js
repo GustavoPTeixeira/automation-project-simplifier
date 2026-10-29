@@ -1,3 +1,30 @@
+function parsePackages(input) {
+    if (!input) return {};
+    const list = Array.isArray(input) ? input : input.split(/\s+/).filter(Boolean);
+    const result = {};
+
+    for (const pkg of list) {
+        const trimmed = pkg.trim();
+        if (!trimmed) continue;
+
+        if (trimmed.startsWith('@')) {
+            const atIndex = trimmed.indexOf('@', 1);
+            if (atIndex !== -1) {
+                result[trimmed.slice(0, atIndex)] = trimmed.slice(atIndex + 1);
+            } else {
+                result[trimmed] = 'latest';
+            }
+        } else if (trimmed.includes('@')) {
+            const [name, version] = trimmed.split('@');
+            result[name] = version || 'latest';
+        } else {
+            result[trimmed] = 'latest';
+        }
+    }
+
+    return result;
+}
+
 function generatePackageJson(options){
     const { projectName, framework, language, testTypes } = options;
     const isTS = language === 'typescript';
@@ -112,6 +139,20 @@ function generatePackageJson(options){
     if (isTS) {
         basePackage.devDependencies['@typescript-eslint/parser'] = '^6.21.0';
         basePackage.devDependencies['@typescript-eslint/eslint-plugin'] = '^6.21.0';
+    }
+
+    if (options.dependencies) {
+        basePackage.dependencies = {
+            ...(basePackage.dependencies || {}),
+            ...parsePackages(options.dependencies),
+        };
+    }
+
+    if (options.devDependencies) {
+        basePackage.devDependencies = {
+            ...(basePackage.devDependencies || {}),
+            ...parsePackages(options.devDependencies),
+        };
     }
     
     return basePackage;

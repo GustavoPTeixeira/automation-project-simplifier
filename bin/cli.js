@@ -25,6 +25,8 @@ program
     .option('--no-examples', 'Não incluir exemplos de testes')
     .option('--ci <provider>', 'Provedor de CI/CD (github, gitlab, azure, bitbucket, jenkins, none)')
     .option('--no-ci', 'Não incluir pipeline de CI/CD')
+    .option('--deps <packages...>', 'Dependências extras separadas por espaço (ex: axios lodash)')
+    .option('--dev-deps <packages...>', 'DevDependencies extras separadas por espaço (ex: allure-playwright)')
     .action(async (projectName, cmdOptions) => {
         const inquirer = (await import('inquirer')).default;
         const chalk = (await import('chalk')).default;
@@ -124,12 +126,28 @@ program
                 default: true,
                 when: () => cmdOptions.examples === undefined,
             },
+            {
+                type: 'input',
+                name: 'dependencies',
+                message: 'Dependências extras para instalar (separadas por espaço, ou Enter para pular):',
+                default: '',
+                when: () => cmdOptions.deps === undefined,
+            },
+            {
+                type: 'input',
+                name: 'devDependencies',
+                message: 'DevDependencies extras para instalar (separadas por espaço, ou Enter para pular):',
+                default: '',
+                when: () => cmdOptions.devDeps === undefined,
+            },
         ]);
 
         const framework = (cmdOptions.framework || answers.framework).toLowerCase();
         const language = (cmdOptions.language || answers.language).toLowerCase();
         const testTypes = parsedTestTypes || answers.testTypes;
         const includeExamples = cmdOptions.examples !== undefined ? cmdOptions.examples : answers.includeExamples;
+        const dependencies = cmdOptions.deps !== undefined ? cmdOptions.deps : answers.dependencies;
+        const devDependencies = cmdOptions.devDeps !== undefined ? cmdOptions.devDeps : answers.devDependencies;
         
         let ciProvider = 'none';
         if (cmdOptions.ci === false) {
@@ -146,6 +164,8 @@ program
             language: language,
             includeExamples: includeExamples,
             ciProvider: ciProvider,
+            dependencies: dependencies,
+            devDependencies: devDependencies,
         };
         const spinner = ora(`Criando seu projeto ${chalk.bold(projectName)}, aguarde um momento... `).start();
 
