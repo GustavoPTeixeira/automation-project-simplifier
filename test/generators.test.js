@@ -79,6 +79,10 @@ for (const [framework, create, language] of combos) {
             const aiDocs = await fs.readFile(path.join(dir, 'AI_TESTING.md'), 'utf8');
             assert.ok(aiDocs.includes('AI Agent Guidelines'), 'invalid AI_TESTING.md content');
 
+            assert.ok(await fs.pathExists(path.join(dir, 'README.md')), 'missing project README.md');
+            const projectReadme = await fs.readFile(path.join(dir, 'README.md'), 'utf8');
+            assert.ok(projectReadme.includes('sample'), 'project README.md missing project name');
+
             const factoryRelPath = framework === 'cypress'
                 ? `cypress/fixtures/user-factory.${language === 'typescript' ? 'ts' : 'js'}`
                 : `fixtures/user-factory.${language === 'typescript' ? 'ts' : 'js'}`;

@@ -1,78 +1,198 @@
-# Test Framework CLI
+# 🚀 Automation Project Simplifier
 
-A CLI tool that generates a complete boilerplate for automated testing projects using Cypress, Playwright, or WebdriverIO.
+> An AI-ready CLI tool that scaffolds complete, production-grade automated testing projects using **Playwright**, **Cypress**, or **WebdriverIO** with POM & SOM architecture.
 
-## 🔡 About This Project
+[![npm version](https://img.shields.io/npm/v/@nerojridder/test-framework-cli.svg)](https://www.npmjs.com/package/@nerojridder/test-framework-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 
-This command-line utility was built to accelerate the initial setup of an automation testing project. With a single command, it asks interactive questions and creates the entire folder structure, configuration files, and code examples, letting you start testing in seconds.
+---
 
-## 🧰 Features
+## 🧰 Key Features
 
-* **Multi-Framework:** Choose between **Cypress**, **Playwright**, or **WebdriverIO**.
-* **Multi-Language:** Full support for **TypeScript** or **JavaScript**.
-* **Hybrid Structure:** Generates a setup ready for both **Frontend (UI)** and **Backend (API)** tests in the same project.
-* **Smart Boilerplate:**
-    * Creates a `package.json` with the correct dependencies and scripts.
-    * Configures `cypress.config.js` / `playwright.config.js` / `wdio.conf.js` (or `.ts`).
-    * Adds `tsconfig.json` (if TypeScript is selected).
-    * Generates **Page Objects (POM)** and **Service Objects (SOM)** with extensible `BasePage` and `BaseService` foundation classes.
-    * Configures **CI/CD pipelines** supporting **GitHub Actions**, **GitLab CI/CD**, **Azure DevOps**, **Bitbucket Pipelines**, or **Jenkins**.
-    * Includes `.gitignore` and `.env.example` files.
+* **Multi-Framework:** Full support for **Playwright**, **Cypress**, or **WebdriverIO (v9)**.
+* **Multi-Language:** First-class **TypeScript** (with `tsconfig.json` & typings) or modern **JavaScript**.
+* **Hybrid Testing Architecture:** Out-of-the-box support for **Frontend (UI)** and **Backend (API)** tests in the same project.
+* **High-Level POM & SOM Foundation:**
+  * `BasePage`: Encapsulates navigation, element interactions, and visibility assertions.
+  * `BaseService`: Encapsulates HTTP client methods (`GET`, `POST`, `PUT`, `DELETE`).
+* **Multi-Cloud CI/CD Pipelines:** Automatically generates production-ready pipelines for:
+  * GitHub Actions (`.github/workflows/e2e.yml`)
+  * GitLab CI/CD (`.gitlab-ci.yml`)
+  * Azure DevOps (`azure-pipelines.yml`)
+  * Bitbucket Pipelines (`bitbucket-pipelines.yml`)
+  * Jenkins (`Jenkinsfile`)
+* **Rich Test Reporting & Artifacts:**
+  * Playwright HTML report + failure screenshot/video retention.
+  * Cypress Mochawesome HTML reporter with inline assets & failure screenshots.
+  * WebdriverIO automatic failure screenshot capture via `afterTest` hook.
+* **Multi-Environment Support:**
+  * Pre-configured templates: `.env.example`, `.env.staging.example`, and `.env.prod.example`.
+  * Dynamic environment resolution via `TEST_ENV` and cross-platform execution (`npm run test:staging`, `npm run test:prod`).
+* **Linting & Code Quality:**
+  * Pre-configured `ESLint` (`eslint:recommended`, Mocha globals, TypeScript rules).
+  * `Prettier` with `.prettierrc` and `.prettierignore`.
+  * Pre-defined scripts: `npm run lint`, `npm run lint:fix`, `npm run format`, `npm run format:check`.
+* **Dynamic Test Data Factories:**
+  * Generates `user-factory` powered by `@faker-js/faker` to eliminate flaky test collisions and hardcoded data.
+* **AI-Native & MCP (Model Context Protocol) Ready:**
+  * Generates `.mcp.json` with Puppeteer MCP server support for AI IDEs (Antigravity, Cursor, Claude Code, Copilot).
+  * Includes `AI_TESTING.md` architectural guidelines for AI coding assistants.
+* **Custom Dependencies On-The-Fly:**
+  * Install extra packages and dev-packages directly during scaffolding via `--deps` and `--dev-deps`.
+
+---
 
 ## 📦 Installation
 
-Install it globally from npm:
+Install globally from npm:
 
 ```bash
 npm install -g @nerojridder/test-framework-cli
 ```
 
-Or, to run it from a local clone of this repository:
+Or run via `npx` without installing:
 
 ```bash
+npx @nerojridder/test-framework-cli create my-automation-tests
+```
+
+Or run from a local clone:
+
+```bash
+git clone https://github.com/nerojridder/automation-project-simplifier.git
+cd automation-project-simplifier
 npm install
 npm link
 ```
 
-Either way, the command is `automation-simplifier`.
+---
 
 ## 🚀 Usage
 
+### 1. Interactive Mode
+
+Run the command and follow the interactive prompts:
+
 ```bash
-automation-simplifier create <your-project-name>
+automation-simplifier create <project-name>
 ```
 
-The CLI prompts (in Portuguese) for:
+You will be prompted for:
+1. **Framework**: `playwright`, `cypress`, or `webdriverio`.
+2. **Language**: `typescript` or `javascript`.
+3. **Test Types**: `Frontend (UI)` and/or `Backend (API)`.
+4. **CI/CD Provider**: `GitHub Actions`, `GitLab CI/CD`, `Azure DevOps`, `Bitbucket Pipelines`, `Jenkins`, or `None`.
+5. **Examples**: Whether to generate sample POM/SOM and tests.
+6. **Extra Dependencies**: Additional runtime packages (space-separated, optional).
+7. **Extra DevDependencies**: Additional dev packages (space-separated, optional).
 
-1. The test framework: `cypress`, `playwright`, or `webdriverio`.
-2. The language: `javascript` or `typescript`.
-3. The test types: `Frontend (UI)` and/or `Backend (API)` (at least one is required).
-4. The CI/CD provider: `GitHub Actions`, `GitLab CI/CD`, `Azure DevOps`, `Bitbucket Pipelines`, `Jenkins`, or `None`.
-5. Whether to include example files (POM/SOM and tests).
+### 2. 100% Non-Interactive Mode (CI / Scripting)
 
-You can also pass flags directly to skip prompts:
+Pass flags directly to bypass all prompts:
 
 ```bash
-automation-simplifier create <your-project-name> --framework playwright --language typescript --test-types frontend,backend --ci github --examples
+automation-simplifier create my-tests \
+  --framework playwright \
+  --language typescript \
+  --test-types frontend,backend \
+  --ci github \
+  --examples \
+  --deps "axios lodash" \
+  --dev-deps "allure-playwright"
 ```
 
-Available `--ci` options: `github`, `gitlab`, `azure`, `bitbucket`, `jenkins`, `none` (or `--no-ci`).
+#### Available CLI Flags:
 
-Then install the generated project's dependencies:
+| Flag | Description | Options |
+|---|---|---|
+| `-f, --framework <name>` | Test framework | `cypress`, `playwright`, `webdriverio` |
+| `-l, --language <lang>` | Programming language | `javascript`, `typescript` |
+| `-t, --test-types <types>` | Test types separated by comma | `frontend`, `backend`, `frontend,backend` |
+| `--ci <provider>` | CI/CD pipeline provider | `github`, `gitlab`, `azure`, `bitbucket`, `jenkins`, `none` |
+| `--no-ci` | Skip CI/CD pipeline generation | - |
+| `--examples` / `--no-examples` | Include or skip sample POM/SOM & test files | - |
+| `--deps <packages...>` | Custom runtime dependencies | Space-separated list (e.g. `axios lodash`) |
+| `--dev-deps <packages...>` | Custom development dependencies | Space-separated list (e.g. `allure-playwright`) |
+
+---
+
+## 📁 Generated Project Structure (Playwright Example)
+
+```
+my-tests/
+├── .github/workflows/e2e.yml   # CI/CD Pipeline
+├── fixtures/
+│   ├── users.ts                # Static fixtures
+│   └── user-factory.ts         # Dynamic Faker data factory
+├── pages/
+│   ├── BasePage.ts             # Foundation Page Object
+│   └── LoginPage.ts            # Example Page Object
+├── services/
+│   ├── BaseService.ts          # Foundation API Service Object
+│   └── UserService.ts          # Example API Service
+├── tests/
+│   ├── login.spec.ts           # Frontend UI test
+│   └── api/users.spec.ts       # Backend API test
+├── .env.example                # Local environment template
+├── .env.staging.example        # Staging environment template
+├── .env.prod.example           # Production environment template
+├── .eslintrc.json              # ESLint configuration
+├── .prettierrc                 # Prettier configuration
+├── .prettierignore             # Prettier ignore list
+├── .mcp.json                   # Model Context Protocol browser tools
+├── AI_TESTING.md               # Guidelines for AI coding assistants
+├── playwright.config.ts        # Playwright configuration
+├── tsconfig.json               # TypeScript configuration
+└── package.json                # Scripts & dependencies
+```
+
+---
+
+## 🏃 Running Tests in Generated Projects
+
+Once generated, navigate to the project and install dependencies:
 
 ```bash
-cd <your-project-name>
+cd my-tests
 npm install
 ```
 
-## 🧪 Development
+### Pre-configured Scripts:
+
+```bash
+# Run tests
+npm test
+
+# Run tests with UI / Headed mode
+npm run test:ui
+npm run test:headed
+
+# Run tests against specific environments
+npm run test:staging
+npm run test:prod
+
+# Code quality & formatting
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+```
+
+---
+
+## 🧪 Development & Testing the CLI
+
+To run the CLI unit test suite:
 
 ```bash
 npm test
 ```
 
-Runs the automated test suite verifying all framework/language combinations and all 5 CI/CD provider templates.
+Verifies all combinations of frameworks, languages, CI providers, reporting, environment switching, linting, data factories, and custom dependencies.
+
+---
 
 ## 📄 License
 
-MIT
+[MIT](LICENSE)

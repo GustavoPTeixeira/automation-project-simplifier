@@ -13,6 +13,7 @@ const { generateEnvContent } = require('../templates/env-config');
 const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } = require('../templates/lint-config');
 const { generateDataFactory } = require('../templates/data-factory');
 const { generateMcpConfig, generateAiInstructions } = require('../templates/mcp-config');
+const { generateProjectReadme } = require('../templates/project-readme');
 
 
 async function createWdioProject(projectPath, options){
@@ -154,6 +155,7 @@ dist/
 
     await fs.writeJson(path.join(projectPath, '.mcp.json'), generateMcpConfig(), { spaces: 2 });
     await fs.writeFile(path.join(projectPath, 'AI_TESTING.md'), generateAiInstructions('webdriverio', language));
+    await fs.writeFile(path.join(projectPath, 'README.md'), generateProjectReadme({ ...options, framework: 'webdriverio' }));
 
     if (ciProvider && ciProvider !== 'none') {
         const { filePath, content } = generateCiWorkflow(ciProvider, 'webdriverio');
