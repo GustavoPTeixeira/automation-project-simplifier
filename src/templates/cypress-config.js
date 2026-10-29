@@ -24,14 +24,21 @@ function generateCypressConfig(language){
   },
 });
 `;
-    if (isTS) {
+     if (isTS) {
         return `import { defineConfig } from 'cypress';
 import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env' });
+import * as fs from 'fs';
+const testEnv = process.env.TEST_ENV || 'local';
+const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
+dotenv.config({ path: envFile });
 export default ${body}`;
     }
     return `const { defineConfig } = require('cypress');
-require('dotenv').config({ path: '.env' });
+const dotenv = require('dotenv');
+const fs = require('fs');
+const testEnv = process.env.TEST_ENV || 'local';
+const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
+dotenv.config({ path: envFile });
 module.exports = ${body}`;
 }
 

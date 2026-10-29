@@ -96,6 +96,11 @@ function generatePackageJson(options){
         }
     }
 
+    basePackage.scripts['test:staging'] = 'cross-env TEST_ENV=staging npm test';
+    basePackage.scripts['test:prod'] = 'cross-env TEST_ENV=prod npm test';
+    basePackage.devDependencies['cross-env'] = '^7.0.3';
+
+    
     return basePackage;
 }
 

@@ -9,6 +9,7 @@ const { generateServiceObject } = require('../templates/service-object');
 const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
 const { generateCiWorkflow } = require('../templates/ci-workflow');
+const { generateEnvContent } = require('../templates/env-config');
 
 async function createPlaywrightProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options;
@@ -123,28 +124,18 @@ test-results/
 playwright-report/
 playwright/.cache/
 .env
+.env.*
+!.env.example
+!.env.*.example
 *.log
 dist/
 .DS_Store
 `;
   await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 
-  // Criar .env.example
-  const envExample = `# URL base da aplicação
-BASE_URL=http://localhost:3000
-
-# URL base da API
-API_URL=http://localhost:3000/api
-
-# Credenciais de teste
-TEST_USERNAME=testuser
-TEST_PASSWORD=password123
-
-# Configurações do Playwright
-HEADED=false
-SLOWMO=0
-`;
-  await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
+  await fs.writeFile(path.join(projectPath, '.env.example'), generateEnvContent('playwright', 'local'));
+  await fs.writeFile(path.join(projectPath, '.env.staging.example'), generateEnvContent('playwright', 'staging'));
+  await fs.writeFile(path.join(projectPath, '.env.prod.example'), generateEnvContent('playwright', 'prod'));
 
   if (ciProvider && ciProvider !== 'none') {
       const { filePath, content } = generateCiWorkflow(ciProvider, 'playwright');

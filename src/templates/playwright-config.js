@@ -1,12 +1,19 @@
 function generatePlaywrightConfig(language) {
     const isTS = language === 'typescript';
-
     const header = isTS
-        ? `import 'dotenv/config';
-import { defineConfig, devices } from '@playwright/test';
+        ? `import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import fs from 'fs';
+const testEnv = process.env.TEST_ENV || 'local';
+const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
+dotenv.config({ path: envFile });
 `
-        : `require('dotenv').config();
-const { defineConfig, devices } = require('@playwright/test');
+        : `const { defineConfig, devices } = require('@playwright/test');
+const dotenv = require('dotenv');
+const fs = require('fs');
+const testEnv = process.env.TEST_ENV || 'local';
+const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
+dotenv.config({ path: envFile });
 `;
 
     const exportStatement = isTS ? 'export default defineConfig({' : 'module.exports = defineConfig({';

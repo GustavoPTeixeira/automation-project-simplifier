@@ -44,19 +44,31 @@ for (const [framework, create, language] of combos) {
             const gitignore = await fs.readFile(path.join(dir, '.gitignore'), 'utf8');
             assert.ok(!/^\s+\S/m.test(gitignore), '.gitignore has indented lines');
 
+            assert.ok(await fs.pathExists(path.join(dir, '.env.example')), 'missing .env.example');
+            assert.ok(await fs.pathExists(path.join(dir, '.env.staging.example')), 'missing .env.staging.example');
+            assert.ok(await fs.pathExists(path.join(dir, '.env.prod.example')), 'missing .env.prod.example');
+
+            const pkg = await fs.readJson(path.join(dir, 'package.json'));
+            assert.ok(pkg.scripts['test:staging'], 'missing test:staging script');
+            assert.ok(pkg.scripts['test:prod'], 'missing test:prod script');
+            assert.ok(pkg.devDependencies['cross-env'], 'missing cross-env dependency');
+
             if (framework === 'playwright') {
                 const cfg = await fs.readFile(path.join(dir, `playwright.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
                 assert.ok(cfg.includes("screenshot: 'only-on-failure'"), 'playwright missing screenshot on failure');
                 assert.ok(cfg.includes("'html'"), 'playwright missing html reporter');
+                assert.ok(cfg.includes('TEST_ENV'), 'playwright missing TEST_ENV support');
             } else if (framework === 'cypress') {
                 const cfg = await fs.readFile(path.join(dir, `cypress.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
                 assert.ok(cfg.includes('cypress-mochawesome-reporter'), 'cypress missing mochawesome reporter');
+                assert.ok(cfg.includes('TEST_ENV'), 'cypress missing TEST_ENV support');
                 const support = await fs.readFile(path.join(dir, `cypress/support/e2e.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
                 assert.ok(support.includes('cypress-mochawesome-reporter/register'), 'cypress support missing mochawesome register');
             } else if (framework === 'webdriverio') {
                 const cfg = await fs.readFile(path.join(dir, `wdio.conf.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
                 assert.ok(cfg.includes('afterTest'), 'wdio missing afterTest hook');
                 assert.ok(cfg.includes('saveScreenshot'), 'wdio missing saveScreenshot on failure');
+                assert.ok(cfg.includes('TEST_ENV'), 'wdio missing TEST_ENV support');
             }
 
             const workflow = await fs.readFile(path.join(dir, '.github', 'workflows', 'e2e.yml'), 'utf8');

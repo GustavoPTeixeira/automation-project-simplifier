@@ -9,6 +9,7 @@ const { generateServiceObject } = require('../templates/service-object')
 const { generateFrontendTest } = require('../templates/frontend-test')
 const { generateBackendTest } = require('../templates/backend-test')
 const { generateCiWorkflow } = require('../templates/ci-workflow')
+const { generateEnvContent } = require('../templates/env-config')
 
 async function createCypressProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options
@@ -135,23 +136,18 @@ cypress/screenshots/
 cypress/downloads/
 cypress/reports/
 .env
+.env.*
+!.env.example
+!.env.*.example
 *.log
 dist/
 .DS_Store
 `;
     await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 
-    const envExample = `# URL base da aplicação
-CYPRESS_BASE_URL=http://localhost:3000
-
-# URL base da API
-CYPRESS_API_URL=http://localhost:3000/api
-
-# Credenciais de teste
-TEST_USERNAME=testuser
-TEST_PASSWORD=password123
-`;
-    await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
+    await fs.writeFile(path.join(projectPath, '.env.example'), generateEnvContent('cypress', 'local'));
+    await fs.writeFile(path.join(projectPath, '.env.staging.example'), generateEnvContent('cypress', 'staging'));
+    await fs.writeFile(path.join(projectPath, '.env.prod.example'), generateEnvContent('cypress', 'prod'));
 
     if (ciProvider && ciProvider !== 'none') {
         const { filePath, content } = generateCiWorkflow(ciProvider, 'cypress');

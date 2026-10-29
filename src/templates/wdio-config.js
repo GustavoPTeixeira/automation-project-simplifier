@@ -1,9 +1,20 @@
 function generateWdioConfig(language){
     const isTS = language === 'typescript';
 
-    const header = isTS
-        ? `import 'dotenv/config';\nimport type { Options } from '@wdio/types';\n`
-        : `require('dotenv').config();\n`;
+     const header = isTS
+        ? `import dotenv from 'dotenv';
+import fs from 'fs';
+import type { Options } from '@wdio/types';
+const testEnv = process.env.TEST_ENV || 'local';
+const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
+dotenv.config({ path: envFile });
+`
+        : `const dotenv = require('dotenv');
+const fs = require('fs');
+const testEnv = process.env.TEST_ENV || 'local';
+const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
+dotenv.config({ path: envFile });
+`;
 
     const exportStatement = isTS
         ? 'export const config: Options.Testrunner = {'

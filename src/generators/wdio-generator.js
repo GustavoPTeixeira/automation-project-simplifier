@@ -9,6 +9,7 @@ const { generateServiceObject } = require('../templates/service-object');
 const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
 const { generateCiWorkflow } = require('../templates/ci-workflow');
+const { generateEnvContent } = require('../templates/env-config');
 
 async function createWdioProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options;
@@ -125,26 +126,18 @@ export const testUser = users[0];
     const gitignore = `node_modules/
 screenshots/
 .env
+.env.*
+!.env.example
+!.env.*.example
 *.log
 dist/
 .DS_Store
 `;
     await fs.writeFile(path.join(projectPath, '.gitignore'), gitignore);
 
-    const envExample = `# URL base da aplicação
-BASE_URL=http://localhost:3000
-
-# URL base da API
-API_URL=http://localhost:3000/api
-
-# Credenciais de teste
-TEST_USERNAME=testuser
-TEST_PASSWORD=password123
-
-# Configurações do WebdriverIO
-HEADED=false
-`;
-    await fs.writeFile(path.join(projectPath, '.env.example'), envExample);
+    await fs.writeFile(path.join(projectPath, '.env.example'), generateEnvContent('webdriverio', 'local'));
+    await fs.writeFile(path.join(projectPath, '.env.staging.example'), generateEnvContent('webdriverio', 'staging'));
+    await fs.writeFile(path.join(projectPath, '.env.prod.example'), generateEnvContent('webdriverio', 'prod'));
 
     if (ciProvider && ciProvider !== 'none') {
         const { filePath, content } = generateCiWorkflow(ciProvider, 'webdriverio');
