@@ -51,7 +51,24 @@ for (const [framework, create, language] of combos) {
             const pkg = await fs.readJson(path.join(dir, 'package.json'));
             assert.ok(pkg.scripts['test:staging'], 'missing test:staging script');
             assert.ok(pkg.scripts['test:prod'], 'missing test:prod script');
+            assert.ok(pkg.scripts['lint'], 'missing lint script');
+            assert.ok(pkg.scripts['lint:fix'], 'missing lint:fix script');
+            assert.ok(pkg.scripts['format'], 'missing format script');
+            assert.ok(pkg.scripts['format:check'], 'missing format:check script');
+
             assert.ok(pkg.devDependencies['cross-env'], 'missing cross-env dependency');
+            assert.ok(pkg.devDependencies['eslint'], 'missing eslint dependency');
+            assert.ok(pkg.devDependencies['prettier'], 'missing prettier dependency');
+            assert.ok(pkg.devDependencies['eslint-config-prettier'], 'missing eslint-config-prettier dependency');
+
+            if (language === 'typescript') {
+                assert.ok(pkg.devDependencies['@typescript-eslint/parser'], 'missing @typescript-eslint/parser');
+                assert.ok(pkg.devDependencies['@typescript-eslint/eslint-plugin'], 'missing @typescript-eslint/eslint-plugin');
+            }
+
+            assert.ok(await fs.pathExists(path.join(dir, '.eslintrc.json')), 'missing .eslintrc.json');
+            assert.ok(await fs.pathExists(path.join(dir, '.prettierrc')), 'missing .prettierrc');
+            assert.ok(await fs.pathExists(path.join(dir, '.prettierignore')), 'missing .prettierignore');
 
             if (framework === 'playwright') {
                 const cfg = await fs.readFile(path.join(dir, `playwright.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');

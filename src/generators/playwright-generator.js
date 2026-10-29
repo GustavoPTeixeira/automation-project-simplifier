@@ -10,6 +10,7 @@ const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
 const { generateCiWorkflow } = require('../templates/ci-workflow');
 const { generateEnvContent } = require('../templates/env-config');
+const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } = require('../templates/lint-config');
 
 async function createPlaywrightProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options;
@@ -136,6 +137,10 @@ dist/
   await fs.writeFile(path.join(projectPath, '.env.example'), generateEnvContent('playwright', 'local'));
   await fs.writeFile(path.join(projectPath, '.env.staging.example'), generateEnvContent('playwright', 'staging'));
   await fs.writeFile(path.join(projectPath, '.env.prod.example'), generateEnvContent('playwright', 'prod'));
+
+  await fs.writeJson(path.join(projectPath, '.eslintrc.json'), generateEslintConfig('playwright', language), { spaces: 2 });
+  await fs.writeJson(path.join(projectPath, '.prettierrc'), generatePrettierConfig(), { spaces: 2 });
+  await fs.writeFile(path.join(projectPath, '.prettierignore'), generatePrettierIgnore('playwright'));
 
   if (ciProvider && ciProvider !== 'none') {
       const { filePath, content } = generateCiWorkflow(ciProvider, 'playwright');

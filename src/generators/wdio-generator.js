@@ -10,6 +10,7 @@ const { generateFrontendTest } = require('../templates/frontend-test');
 const { generateBackendTest } = require('../templates/backend-test');
 const { generateCiWorkflow } = require('../templates/ci-workflow');
 const { generateEnvContent } = require('../templates/env-config');
+const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } = require('../templates/lint-config');
 
 async function createWdioProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options;
@@ -138,6 +139,10 @@ dist/
     await fs.writeFile(path.join(projectPath, '.env.example'), generateEnvContent('webdriverio', 'local'));
     await fs.writeFile(path.join(projectPath, '.env.staging.example'), generateEnvContent('webdriverio', 'staging'));
     await fs.writeFile(path.join(projectPath, '.env.prod.example'), generateEnvContent('webdriverio', 'prod'));
+
+    await fs.writeJson(path.join(projectPath, '.eslintrc.json'), generateEslintConfig('webdriverio', language), { spaces: 2 });
+    await fs.writeJson(path.join(projectPath, '.prettierrc'), generatePrettierConfig(), { spaces: 2 });
+    await fs.writeFile(path.join(projectPath, '.prettierignore'), generatePrettierIgnore('webdriverio'));
 
     if (ciProvider && ciProvider !== 'none') {
         const { filePath, content } = generateCiWorkflow(ciProvider, 'webdriverio');

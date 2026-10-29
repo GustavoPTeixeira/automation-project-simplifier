@@ -98,8 +98,18 @@ function generatePackageJson(options){
 
     basePackage.scripts['test:staging'] = 'cross-env TEST_ENV=staging npm test';
     basePackage.scripts['test:prod'] = 'cross-env TEST_ENV=prod npm test';
+    basePackage.scripts['lint'] = 'eslint .';
+    basePackage.scripts['lint:fix'] = 'eslint . --fix';
+    basePackage.scripts['format'] = 'prettier --write .';
+    basePackage.scripts['format:check'] = 'prettier --check .';
     basePackage.devDependencies['cross-env'] = '^7.0.3';
-
+    basePackage.devDependencies['eslint'] = '^8.56.0';
+    basePackage.devDependencies['prettier'] = '^3.2.5';
+    basePackage.devDependencies['eslint-config-prettier'] = '^9.1.0';
+    if (isTS) {
+        basePackage.devDependencies['@typescript-eslint/parser'] = '^6.21.0';
+        basePackage.devDependencies['@typescript-eslint/eslint-plugin'] = '^6.21.0';
+    }
     
     return basePackage;
 }

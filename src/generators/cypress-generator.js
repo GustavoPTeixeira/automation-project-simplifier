@@ -10,6 +10,7 @@ const { generateFrontendTest } = require('../templates/frontend-test')
 const { generateBackendTest } = require('../templates/backend-test')
 const { generateCiWorkflow } = require('../templates/ci-workflow')
 const { generateEnvContent } = require('../templates/env-config')
+const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } = require('../templates/lint-config')
 
 async function createCypressProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options
@@ -148,6 +149,10 @@ dist/
     await fs.writeFile(path.join(projectPath, '.env.example'), generateEnvContent('cypress', 'local'));
     await fs.writeFile(path.join(projectPath, '.env.staging.example'), generateEnvContent('cypress', 'staging'));
     await fs.writeFile(path.join(projectPath, '.env.prod.example'), generateEnvContent('cypress', 'prod'));
+
+    await fs.writeJson(path.join(projectPath, '.eslintrc.json'), generateEslintConfig('cypress', language), { spaces: 2 });
+    await fs.writeJson(path.join(projectPath, '.prettierrc'), generatePrettierConfig(), { spaces: 2 });
+    await fs.writeFile(path.join(projectPath, '.prettierignore'), generatePrettierIgnore('cypress'));
 
     if (ciProvider && ciProvider !== 'none') {
         const { filePath, content } = generateCiWorkflow(ciProvider, 'cypress');
