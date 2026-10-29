@@ -123,6 +123,7 @@ export const testUser = users[0];
     }
 
     const gitignore = `node_modules/
+screenshots/
 .env
 *.log
 dist/

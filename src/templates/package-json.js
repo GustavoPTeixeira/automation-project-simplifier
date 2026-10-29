@@ -31,6 +31,7 @@ function generatePackageJson(options){
 
         basePackage.devDependencies = {
             'cypress': '^16.0.0',
+            'cypress-mochawesome-reporter': '^3.8.2',
             'dotenv': '^18.0.0'
         };
 

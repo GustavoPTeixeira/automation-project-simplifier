@@ -64,7 +64,7 @@ async function createCypressProject(projectPath, options){
     }
 
     const supportFile = `cypress/support/e2e.${isTS ? 'ts' : 'js'}`;
-    const supportContent = `// Cypress support file\nimport './commands';\n`;
+    const supportContent = `// Cypress support file\nimport './commands';\nimport 'cypress-mochawesome-reporter/register';\n`;
     await fs.writeFile(path.join(projectPath, supportFile), supportContent);
     
     const commandsFile = `cypress/support/commands.${isTS ? 'ts' : 'js'}`;
@@ -133,6 +133,7 @@ export {};
 cypress/videos/
 cypress/screenshots/
 cypress/downloads/
+cypress/reports/
 .env
 *.log
 dist/

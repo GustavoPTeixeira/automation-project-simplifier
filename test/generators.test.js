@@ -44,6 +44,21 @@ for (const [framework, create, language] of combos) {
             const gitignore = await fs.readFile(path.join(dir, '.gitignore'), 'utf8');
             assert.ok(!/^\s+\S/m.test(gitignore), '.gitignore has indented lines');
 
+            if (framework === 'playwright') {
+                const cfg = await fs.readFile(path.join(dir, `playwright.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
+                assert.ok(cfg.includes("screenshot: 'only-on-failure'"), 'playwright missing screenshot on failure');
+                assert.ok(cfg.includes("'html'"), 'playwright missing html reporter');
+            } else if (framework === 'cypress') {
+                const cfg = await fs.readFile(path.join(dir, `cypress.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
+                assert.ok(cfg.includes('cypress-mochawesome-reporter'), 'cypress missing mochawesome reporter');
+                const support = await fs.readFile(path.join(dir, `cypress/support/e2e.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
+                assert.ok(support.includes('cypress-mochawesome-reporter/register'), 'cypress support missing mochawesome register');
+            } else if (framework === 'webdriverio') {
+                const cfg = await fs.readFile(path.join(dir, `wdio.conf.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
+                assert.ok(cfg.includes('afterTest'), 'wdio missing afterTest hook');
+                assert.ok(cfg.includes('saveScreenshot'), 'wdio missing saveScreenshot on failure');
+            }
+
             const workflow = await fs.readFile(path.join(dir, '.github', 'workflows', 'e2e.yml'), 'utf8');
             assert.ok(workflow.includes('name: End-to-End Tests'), 'CI workflow missing name');
         } finally {
