@@ -12,6 +12,7 @@ const { generateCiWorkflow } = require('../templates/ci-workflow')
 const { generateEnvContent } = require('../templates/env-config')
 const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } = require('../templates/lint-config')
 const { generateDataFactory } = require('../templates/data-factory');
+const { generateMcpConfig, generateAiInstructions } = require('../templates/mcp-config');
 
 async function createCypressProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider } = options
@@ -155,6 +156,9 @@ dist/
     await fs.writeJson(path.join(projectPath, '.eslintrc.json'), generateEslintConfig('cypress', language), { spaces: 2 });
     await fs.writeJson(path.join(projectPath, '.prettierrc'), generatePrettierConfig(), { spaces: 2 });
     await fs.writeFile(path.join(projectPath, '.prettierignore'), generatePrettierIgnore('cypress'));
+
+    await fs.writeJson(path.join(projectPath, '.mcp.json'), generateMcpConfig(), { spaces: 2 });
+    await fs.writeFile(path.join(projectPath, 'AI_TESTING.md'), generateAiInstructions('cypress', language));
 
     if (ciProvider && ciProvider !== 'none') {
         const { filePath, content } = generateCiWorkflow(ciProvider, 'cypress');

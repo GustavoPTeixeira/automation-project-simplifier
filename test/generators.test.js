@@ -71,6 +71,14 @@ for (const [framework, create, language] of combos) {
             assert.ok(await fs.pathExists(path.join(dir, '.prettierrc')), 'missing .prettierrc');
             assert.ok(await fs.pathExists(path.join(dir, '.prettierignore')), 'missing .prettierignore');
 
+            assert.ok(await fs.pathExists(path.join(dir, '.mcp.json')), 'missing .mcp.json');
+            const mcp = await fs.readJson(path.join(dir, '.mcp.json'));
+            assert.ok(mcp.mcpServers && mcp.mcpServers.puppeteer, 'invalid .mcp.json content');
+
+            assert.ok(await fs.pathExists(path.join(dir, 'AI_TESTING.md')), 'missing AI_TESTING.md');
+            const aiDocs = await fs.readFile(path.join(dir, 'AI_TESTING.md'), 'utf8');
+            assert.ok(aiDocs.includes('AI Agent Guidelines'), 'invalid AI_TESTING.md content');
+
             const factoryRelPath = framework === 'cypress'
                 ? `cypress/fixtures/user-factory.${language === 'typescript' ? 'ts' : 'js'}`
                 : `fixtures/user-factory.${language === 'typescript' ? 'ts' : 'js'}`;
