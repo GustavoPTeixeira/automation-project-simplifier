@@ -1,24 +1,27 @@
+const { generateEnvLoader } = require('./env-loader');
+
 function generatePlaywrightConfig(language) {
     const isTS = language === 'typescript';
     const header = isTS
         ? `import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import fs from 'fs';
-const testEnv = process.env.TEST_ENV || 'local';
-const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
-dotenv.config({ path: envFile });
 `
         : `const { defineConfig, devices } = require('@playwright/test');
 const dotenv = require('dotenv');
 const fs = require('fs');
-const testEnv = process.env.TEST_ENV || 'local';
-const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
-dotenv.config({ path: envFile });
 `;
 
     const exportStatement = isTS ? 'export default defineConfig({' : 'module.exports = defineConfig({';
 
+    // API specs are matched by file name (*.api.spec.*) rather than by folder: Playwright
+    // tests these patterns against the absolute path, so a folder pattern like /api/
+    // would also match a parent directory that happens to be called "api".
     return `${header}
+${generateEnvLoader()}
+// API tests (*.api.spec.*) run once in the "api" project, without a browser.
+const API_SPECS = /\\.api\\.spec\\.[jt]s$/;
+
 ${exportStatement}
   testDir: './tests',
   timeout: 30000,
@@ -43,15 +46,22 @@ ${exportStatement}
 
   projects: [
     {
+      name: 'api',
+      testMatch: API_SPECS,
+    },
+    {
       name: 'chromium',
+      testIgnore: API_SPECS,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'firefox',
+      testIgnore: API_SPECS,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
+      testIgnore: API_SPECS,
       use: { ...devices['Desktop Safari'] },
     },
   ],

@@ -29,9 +29,10 @@ export function createFakeUsers(count: number = 3): UserData[] {
 `;
     }
 
-    return `const { faker } = require('@faker-js/faker');
+    // ES module syntax, like the generated pages/services/tests it is imported from.
+    return `import { faker } from '@faker-js/faker';
 
-function createFakeUser(overrides = {}) {
+export function createFakeUser(overrides = {}) {
   return {
     id: faker.string.uuid(),
     username: faker.internet.userName(),
@@ -42,14 +43,9 @@ function createFakeUser(overrides = {}) {
   };
 }
 
-function createFakeUsers(count = 3) {
+export function createFakeUsers(count = 3) {
   return Array.from({ length: count }, () => createFakeUser());
 }
-
-module.exports = {
-  createFakeUser,
-  createFakeUsers,
-};
 `;
 }
 

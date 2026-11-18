@@ -10,7 +10,7 @@ function generateProjectReadme(options = {}) {
     return `# ${projectName}
 
 > Automated testing suite built with **${(framework || '').toUpperCase()}** and **${(language || '').toUpperCase()}**.
-> Scaffolded with [automation-project-simplifier](https://github.com/nerojridder/automation-project-simplifier).
+> Scaffolded with [automation-project-simplifier](https://github.com/GustavoPTeixeira/automation-project-simplifier).
 
 ---
 
@@ -24,18 +24,20 @@ npm install
 
 ### 2. Environment Setup
 
-Copy one of the environment templates to your active \`.env\` file:
+Each environment reads its own file, selected by the \`TEST_ENV\` variable. Create the ones you need from the templates:
 
 \`\`\`bash
-# Local development (default)
+# Local development: npm test (TEST_ENV unset)
 cp .env.example .env
 
-# Or for staging
-cp .env.staging.example .env
+# Staging: npm run test:staging (TEST_ENV=staging)
+cp .env.staging.example .env.staging
 
-# Or for production
-cp .env.prod.example .env
+# Production: npm run test:prod (TEST_ENV=prod)
+cp .env.prod.example .env.prod
 \`\`\`
+
+If \`TEST_ENV\` is set and its file does not exist, the run fails instead of falling back to another environment.
 
 ---
 

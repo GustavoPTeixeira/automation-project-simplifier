@@ -6,6 +6,29 @@ const path = require('path');
 const { createCypressProject } = require('../src/generators/cypress-generator');
 const { createPlaywrightProject } = require('../src/generators/playwright-generator');
 const { createWdioProject } = require('../src/generators/wdio-generator');
+const { validateProjectName, parsePackages } = require('../src/utils/validation');
+
+const FRAMEWORKS = ['cypress', 'playwright', 'webdriverio'];
+const LANGUAGES = ['javascript', 'typescript'];
+const TEST_TYPES = ['frontend', 'backend'];
+const CI_PROVIDERS = ['github', 'gitlab', 'azure', 'bitbucket', 'jenkins', 'none'];
+
+// Used for the optional settings when nobody can be prompted (--yes, or no interactive terminal).
+const NON_INTERACTIVE_DEFAULTS = {
+    ciProvider: 'github',
+    includeExamples: true,
+    dependencies: '',
+    devDependencies: '',
+};
+
+function packagesInputError(input) {
+    try {
+        parsePackages(input);
+        return null;
+    } catch (error) {
+        return error.message;
+    }
+}
 
 const program = new Command();
 
@@ -17,7 +40,7 @@ program
     .command('create')
     .alias('new')
     .description('Criar um novo projeto de testes automatizados')
-    .argument('<project-name>', 'Nome do projeto a ser criado')
+    .argument('<project-name>', 'Nome do projeto a ser criado (pasta no diretório atual e nome do pacote npm)')
     .option('-f, --framework <framework>', 'Framework de teste (cypress, playwright, webdriverio)')
     .option('-l, --language <language>', 'Linguagem (javascript, typescript)')
     .option('-t, --test-types <types>', 'Tipos de testes separados por vírgula (frontend, backend)')
@@ -27,29 +50,36 @@ program
     .option('--no-ci', 'Não incluir pipeline de CI/CD')
     .option('--deps <packages...>', 'Dependências extras separadas por espaço (ex: axios lodash)')
     .option('--dev-deps <packages...>', 'DevDependencies extras separadas por espaço (ex: allure-playwright)')
+    .option('-y, --yes', 'Não fazer perguntas: usa os padrões para as opções omitidas (CI: github, exemplos: sim, sem dependências extras)')
     .action(async (projectName, cmdOptions) => {
         const inquirer = (await import('inquirer')).default;
         const chalk = (await import('chalk')).default;
         const ora = (await import('ora')).default;
+
+        const fail = (message) => {
+            console.error(chalk.red(message));
+            process.exitCode = 1;
+        };
+
+        const nameError = validateProjectName(projectName);
+        if(nameError){
+            return fail(nameError);
+        }
+
         const projectPath = path.join(process.cwd(), projectName);
         if(await fs.pathExists(projectPath)){
             const existing = await fs.readdir(projectPath);
             if(existing.length > 0){
-                console.error(chalk.red(`A pasta "${projectName}" já existe e não está vazia. Escolha outro nome.`));
-                process.exitCode = 1;
-                return;
+                return fail(`A pasta "${projectName}" já existe e não está vazia. Escolha outro nome.`);
             }
         }
-        if(cmdOptions.framework && !['cypress', 'playwright', 'webdriverio'].includes(cmdOptions.framework.toLowerCase())){
-                console.error(chalk.red(`Framework inválido: "${cmdOptions.framework}". Escolha "cypress", "playwright" ou "webdriverio".`));
-                process.exitCode = 1;
-                return;
+
+        if(cmdOptions.framework && !FRAMEWORKS.includes(cmdOptions.framework.toLowerCase())){
+            return fail(`Framework inválido: "${cmdOptions.framework}". Escolha "cypress", "playwright" ou "webdriverio".`);
         }
 
-        if(cmdOptions.language && !['javascript', 'typescript'].includes(cmdOptions.language.toLowerCase())){
-                console.error(chalk.red(`Linguagem inválida: "${cmdOptions.language}". Escolha "javascript" ou "typescript".`));
-                process.exitCode = 1;
-                return;
+        if(cmdOptions.language && !LANGUAGES.includes(cmdOptions.language.toLowerCase())){
+            return fail(`Linguagem inválida: "${cmdOptions.language}". Escolha "javascript" ou "typescript".`);
         }
 
         let parsedTestTypes = null;
@@ -58,34 +88,53 @@ program
                 .split(',')
                 .map((t) => t.trim().toLowerCase())
                 .filter(Boolean);
-            const invalid = parsedTestTypes.filter((t) => !['frontend', 'backend'].includes(t));
+            const invalid = parsedTestTypes.filter((t) => !TEST_TYPES.includes(t));
             if(invalid.length > 0 || parsedTestTypes.length === 0){
-                console.error(chalk.red(`Tipo(s) de teste inválido(s): "${cmdOptions.testTypes}". Escolha "frontend", "backend" ou "frontend,backend".`));
-                process.exitCode = 1;
-                return;
+                return fail(`Tipo(s) de teste inválido(s): "${cmdOptions.testTypes}". Escolha "frontend", "backend" ou "frontend,backend".`);
             }
         }
 
-        const validCiProviders = ['github', 'gitlab', 'azure', 'bitbucket', 'jenkins', 'none'];
-        if(cmdOptions.ci && typeof cmdOptions.ci === 'string' && !validCiProviders.includes(cmdOptions.ci.toLowerCase())){
-            console.error(chalk.red(`Provedor de CI/CD inválido: "${cmdOptions.ci}". Escolha entre: ${validCiProviders.join(', ')}.`));
-            process.exitCode = 1;
-            return;
+        if(cmdOptions.ci && typeof cmdOptions.ci === 'string' && !CI_PROVIDERS.includes(cmdOptions.ci.toLowerCase())){
+            return fail(`Provedor de CI/CD inválido: "${cmdOptions.ci}". Escolha entre: ${CI_PROVIDERS.join(', ')}.`);
         }
 
-        const answers = await inquirer.prompt([
+        for (const [flag, value] of [['--deps', cmdOptions.deps], ['--dev-deps', cmdOptions.devDeps]]) {
+            const error = packagesInputError(value);
+            if (error) {
+                return fail(`${flag}: ${error}`);
+            }
+        }
+
+        // Prompting without a terminal (CI, pipes) makes inquirer exit silently with code 1,
+        // so only prompt when someone can answer. Otherwise the choices without a sensible
+        // default must come from flags.
+        const interactive = Boolean(process.stdin.isTTY) && !cmdOptions.yes;
+        if(!interactive){
+            const missing = [];
+            if(!cmdOptions.framework) missing.push('--framework');
+            if(!cmdOptions.language) missing.push('--language');
+            if(!parsedTestTypes) missing.push('--test-types');
+            if(missing.length > 0){
+                const reason = cmdOptions.yes
+                    ? 'Com --yes, informe também'
+                    : 'Não há um terminal interativo para perguntar as opções. Informe';
+                return fail(`${reason}: ${missing.join(', ')}.`);
+            }
+        }
+
+        const answers = !interactive ? NON_INTERACTIVE_DEFAULTS : await inquirer.prompt([
             {
                 type: 'list',
                 name: 'framework',
                 message: 'Selecione o framework de teste:',
-                choices: ['cypress', 'playwright', 'webdriverio'],
+                choices: FRAMEWORKS,
                 when: () => !cmdOptions.framework,
             },
             {
                 type: 'list',
                 name: 'language',
                 message: 'Selecione a linguagem de programação:',
-                choices: ['javascript', 'typescript'],
+                choices: LANGUAGES,
                 when: () => !cmdOptions.language,
             },
             {
@@ -132,6 +181,7 @@ program
                 message: 'Dependências extras para instalar (separadas por espaço, ou Enter para pular):',
                 default: '',
                 when: () => cmdOptions.deps === undefined,
+                validate: (input) => packagesInputError(input) || true,
             },
             {
                 type: 'input',
@@ -139,6 +189,7 @@ program
                 message: 'DevDependencies extras para instalar (separadas por espaço, ou Enter para pular):',
                 default: '',
                 when: () => cmdOptions.devDeps === undefined,
+                validate: (input) => packagesInputError(input) || true,
             },
         ]);
 
@@ -148,7 +199,7 @@ program
         const includeExamples = cmdOptions.examples !== undefined ? cmdOptions.examples : answers.includeExamples;
         const dependencies = cmdOptions.deps !== undefined ? cmdOptions.deps : answers.dependencies;
         const devDependencies = cmdOptions.devDeps !== undefined ? cmdOptions.devDeps : answers.devDependencies;
-        
+
         let ciProvider = 'none';
         if (cmdOptions.ci === false) {
             ciProvider = 'none';
@@ -182,6 +233,9 @@ program
             console.log(chalk.white('Para iniciar, execute os seguintes comandos:'));
             console.log(chalk.cyan(`  cd ${projectName}`));
             console.log(chalk.cyan('  npm install'));
+            if(!includeExamples){
+                console.log(chalk.yellow('Nenhum teste de exemplo foi gerado: "npm test" (e o pipeline de CI) falha com "nenhum teste encontrado" até você adicionar o primeiro spec.'));
+            }
         } catch (error){
             spinner.fail(chalk.red('Ocorreu um erro ao criar o projeto: ' + error.message));
             console.error(error);
@@ -189,4 +243,7 @@ program
         }
 })
 
-program.parse(process.argv);
+program.parseAsync(process.argv).catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

@@ -12,6 +12,15 @@ function generateEslintConfig(framework, language) {
     if (framework === 'cypress') {
         globals.cy = 'readonly';
         globals.Cypress = 'readonly';
+        globals.expect = 'readonly';
+        globals.assert = 'readonly';
+    }
+    if (framework === 'webdriverio') {
+        globals.browser = 'readonly';
+        globals.driver = 'readonly';
+        globals.$ = 'readonly';
+        globals.$$ = 'readonly';
+        globals.expect = 'readonly';
     }
     const config = {
         env,
@@ -38,6 +47,9 @@ function generateEslintConfig(framework, language) {
         config.rules = {
             '@typescript-eslint/no-unused-vars': 'warn',
             '@typescript-eslint/no-explicit-any': 'warn',
+            // Allows `declare global { namespace Cypress { ... } }`, the documented way
+            // to type custom Cypress commands.
+            '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
             'no-console': 'off',
         };
     }

@@ -1,6 +1,6 @@
 {
     "name": "@nerojridder/test-framework-cli",
-    "version": "1.1.0",
+    "version": "1.3.0",
     "description": "A CLI tool for managing test frameworks",
     "bin": {
         "automation-simplifier": "./bin/cli.js"
@@ -8,7 +8,8 @@
     "files": [
         "bin/",
         "src/",
-        "README.md"
+        "README.md",
+        "LICENSE"
     ],
     "scripts": {
         "test": "node --test \"test/*.test.js\""
@@ -31,6 +32,7 @@
         "fs-extra": "11.3.2",
         "inquirer": "9.3.8",
         "ora": "6.1.2",
+        "prettier": "3.10.1",
         "typescript": "^7.0.2"
     }
 }

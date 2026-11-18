@@ -2,12 +2,15 @@ const test = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const os = require('os');
+const vm = require('vm');
 const fs = require('fs-extra');
+const prettier = require('prettier');
 
 const { createCypressProject } = require('../src/generators/cypress-generator');
 const { createPlaywrightProject } = require('../src/generators/playwright-generator');
 const { createWdioProject } = require('../src/generators/wdio-generator');
 const { generateCiWorkflow } = require('../src/templates/ci-workflow');
+const { generateEnvLoader } = require('../src/templates/env-loader');
 
 const combos = [
     ['cypress', createCypressProject, 'typescript'],
@@ -33,12 +36,30 @@ for (const [framework, create, language] of combos) {
             const files = (await fs.readdir(dir, { recursive: true }))
                 .map((f) => path.join(dir, f));
 
+            // WebdriverIO JS projects are native ES modules, so relative imports need the .js
+            // extension. Everywhere else a transpiler/bundler resolves extensionless imports.
+            const needsJsExtension = framework === 'webdriverio' && language === 'javascript';
+            const ignorePath = path.join(dir, '.prettierignore');
+
             for (const file of files) {
                 if (!(await fs.stat(file)).isFile()) continue;
                 const content = await fs.readFile(file, 'utf8');
                 assert.ok(!content.includes('não suportado'), `placeholder content in ${file}`);
-                assert.ok(!/from '[^']*\.(ts|js)'/.test(content), `import with extension in ${file}`);
+                for (const [, specifier] of content.matchAll(/from '(\.[^']*)'/g)) {
+                    if (needsJsExtension) {
+                        assert.ok(specifier.endsWith('.js'), `ES module import without .js extension in ${file}: ${specifier}`);
+                    } else {
+                        assert.ok(!/\.(ts|js)$/.test(specifier), `import with extension in ${file}: ${specifier}`);
+                    }
+                }
                 if (file.endsWith('.json')) JSON.parse(content);
+
+                // Same check as the generated `npm run format:check`.
+                const { ignored, inferredParser } = await prettier.getFileInfo(file, { ignorePath });
+                if (!ignored && inferredParser) {
+                    const options = await prettier.resolveConfig(file);
+                    assert.ok(await prettier.check(content, { ...options, filepath: file }), `not Prettier-formatted: ${file}`);
+                }
             }
 
             const gitignore = await fs.readFile(path.join(dir, '.gitignore'), 'utf8');
@@ -49,6 +70,9 @@ for (const [framework, create, language] of combos) {
             assert.ok(await fs.pathExists(path.join(dir, '.env.prod.example')), 'missing .env.prod.example');
 
             const pkg = await fs.readJson(path.join(dir, 'package.json'));
+            assert.equal(pkg.private, true, 'generated project must be private (no accidental npm publish)');
+            assert.equal(pkg.author, '', 'generated project must not carry the CLI author');
+            assert.equal(pkg.license, 'UNLICENSED');
             assert.ok(pkg.scripts['test:staging'], 'missing test:staging script');
             assert.ok(pkg.scripts['test:prod'], 'missing test:prod script');
             assert.ok(pkg.scripts['lint'], 'missing lint script');
@@ -93,10 +117,19 @@ for (const [framework, create, language] of combos) {
                 assert.ok(cfg.includes("screenshot: 'only-on-failure'"), 'playwright missing screenshot on failure');
                 assert.ok(cfg.includes("'html'"), 'playwright missing html reporter');
                 assert.ok(cfg.includes('TEST_ENV'), 'playwright missing TEST_ENV support');
+                assert.ok(cfg.includes('was not found'), 'playwright config must fail on a missing TEST_ENV file');
+                assert.ok(cfg.includes("name: 'api'"), 'playwright missing browserless api project');
+                assert.equal(pkg.scripts['test:api'], 'playwright test --project=api');
+
+                const apiSpec = path.join(dir, `tests/api/users.api.spec.${language === 'typescript' ? 'ts' : 'js'}`);
+                assert.ok(await fs.pathExists(apiSpec), 'API spec must use the *.api.spec.* suffix to reach the api project');
+                assert.ok(!/beforeAll\(\s*async\s*\(\s*\{[^}]*\brequest\b/.test(await fs.readFile(apiSpec, 'utf8')),
+                    'the request fixture is test-scoped and cannot be shared from beforeAll');
             } else if (framework === 'cypress') {
                 const cfg = await fs.readFile(path.join(dir, `cypress.config.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
                 assert.ok(cfg.includes('cypress-mochawesome-reporter'), 'cypress missing mochawesome reporter');
                 assert.ok(cfg.includes('TEST_ENV'), 'cypress missing TEST_ENV support');
+                assert.ok(cfg.includes('was not found'), 'cypress config must fail on a missing TEST_ENV file');
                 const support = await fs.readFile(path.join(dir, `cypress/support/e2e.${language === 'typescript' ? 'ts' : 'js'}`), 'utf8');
                 assert.ok(support.includes('cypress-mochawesome-reporter/register'), 'cypress support missing mochawesome register');
             } else if (framework === 'webdriverio') {
@@ -104,6 +137,13 @@ for (const [framework, create, language] of combos) {
                 assert.ok(cfg.includes('afterTest'), 'wdio missing afterTest hook');
                 assert.ok(cfg.includes('saveScreenshot'), 'wdio missing saveScreenshot on failure');
                 assert.ok(cfg.includes('TEST_ENV'), 'wdio missing TEST_ENV support');
+                assert.ok(cfg.includes('was not found'), 'wdio config must fail on a missing TEST_ENV file');
+                assert.ok(pkg.scripts['test:headed'].startsWith('cross-env '), 'test:headed must set HEADED via cross-env (Windows)');
+                if (language === 'javascript') {
+                    assert.equal(pkg.type, 'module', 'WebdriverIO loads JS specs with import(): package must be an ES module');
+                    assert.ok(cfg.includes('export const config'), 'wdio.conf.js must be an ES module');
+                    assert.ok(!cfg.includes('require('), 'wdio.conf.js must not use require() in an ES module package');
+                }
             }
 
             const workflow = await fs.readFile(path.join(dir, '.github', 'workflows', 'e2e.yml'), 'utf8');
@@ -113,6 +153,47 @@ for (const [framework, create, language] of combos) {
         }
     });
 }
+
+for (const [framework, create, language] of combos) {
+    test(`${framework} + ${language} without examples still generates the base classes`, async () => {
+        const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'gen-noex-'));
+        try {
+            await create(dir, {
+                projectName: 'sample',
+                testTypes: ['frontend', 'backend'],
+                language,
+                includeExamples: false,
+                ciProvider: 'none',
+            });
+
+            const ext = language === 'typescript' ? 'ts' : 'js';
+            const root = framework === 'cypress' ? 'cypress/' : '';
+            assert.ok(await fs.pathExists(path.join(dir, `${root}pages/BasePage.${ext}`)), 'missing BasePage');
+            assert.ok(await fs.pathExists(path.join(dir, `${root}services/BaseService.${ext}`)), 'missing BaseService');
+            assert.ok(!(await fs.pathExists(path.join(dir, `${root}pages/LoginPage.${ext}`))), 'example page generated with --no-examples');
+            assert.ok(!(await fs.pathExists(path.join(dir, `${root}services/UserService.${ext}`))), 'example service generated with --no-examples');
+        } finally {
+            await fs.remove(dir);
+        }
+    });
+}
+
+test('env loader fails on a missing TEST_ENV file instead of falling back to .env', () => {
+    const run = (env, existingFiles) => {
+        const loaded = [];
+        vm.runInNewContext(generateEnvLoader(), {
+            process: { env },
+            fs: { existsSync: (file) => existingFiles.includes(file) },
+            dotenv: { config: ({ path: file }) => loaded.push(file) },
+        });
+        return loaded;
+    };
+
+    assert.deepEqual(run({}, []), ['.env']);
+    assert.deepEqual(run({ TEST_ENV: 'local' }, ['.env']), ['.env']);
+    assert.deepEqual(run({ TEST_ENV: 'staging' }, ['.env', '.env.staging']), ['.env.staging']);
+    assert.throws(() => run({ TEST_ENV: 'staging' }, ['.env']), /\.env\.staging was not found/);
+});
 
 test('CI workflow generator supports all 5 providers', () => {
     const providers = ['github', 'gitlab', 'azure', 'bitbucket', 'jenkins'];

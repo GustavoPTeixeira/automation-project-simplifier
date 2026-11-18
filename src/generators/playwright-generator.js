@@ -14,6 +14,7 @@ const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } =
 const { generateDataFactory } = require('../templates/data-factory');
 const { generateMcpConfig, generateAiInstructions } = require('../templates/mcp-config');
 const { generateProjectReadme } = require('../templates/project-readme');
+const { formatProject } = require('../utils/format');
 
 async function createPlaywrightProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider, dependencies, devDependencies } = options;
@@ -74,12 +75,19 @@ async function createPlaywrightProject(projectPath, options){
           await fs.writeJson(path.join(projectPath, 'tsconfig.json'), tsConfig, { spaces: 2 });  
     }
     
+    // Base classes are the POM/SOM foundation: generated whether or not examples are included.
+    if(testTypes.includes('frontend')){
+        const basePageFile = `pages/BasePage.${isTS ? 'ts' : 'js'}`;
+        await fs.writeFile(path.join(projectPath, basePageFile), generateBasePage(language, 'playwright'));
+    }
+
+    if(testTypes.includes('backend')){
+        const baseServiceFile = `services/BaseService.${isTS ? 'ts' : 'js'}`;
+        await fs.writeFile(path.join(projectPath, baseServiceFile), generateBaseService(language, 'playwright'));
+    }
+
     if(includeExamples){
         if(testTypes.includes('frontend')){
-            const basePageFile = `pages/BasePage.${isTS ? 'ts' : 'js'}`;
-            const basePageContent = generateBasePage(language, 'playwright');
-            await fs.writeFile(path.join(projectPath, basePageFile), basePageContent);
-
             const pageObjectFile = `pages/LoginPage.${isTS ? 'ts' : 'js'}`;
             const pageObjectContent = generatePageObject(language, 'playwright');
             await fs.writeFile(path.join(projectPath, pageObjectFile), pageObjectContent);
@@ -90,17 +98,14 @@ async function createPlaywrightProject(projectPath, options){
         }
 
         if(testTypes.includes('backend')){
-            const baseServiceFile = `services/BaseService.${isTS ? 'ts' : 'js'}`;
-            const baseServiceContent = generateBaseService(language, 'playwright');
-            await fs.writeFile(path.join(projectPath, baseServiceFile), baseServiceContent);
-
             const serviceObjectFile = `services/UserService.${isTS ? 'ts' : 'js'}`;
             const serviceObjectContent = generateServiceObject(language, 'playwright');
             await fs.writeFile(path.join(projectPath, serviceObjectFile), serviceObjectContent);
       
             const apiTestDir = 'tests/api';
             await fs.ensureDir(path.join(projectPath, apiTestDir));
-            const backendTestFile = `${apiTestDir}/users.spec.${isTS ? 'ts' : 'js'}`;
+            // The *.api.spec.* suffix routes this file to the browserless "api" project.
+            const backendTestFile = `${apiTestDir}/users.api.spec.${isTS ? 'ts' : 'js'}`;
             const backendTestContent = generateBackendTest(language, 'playwright');
             await fs.writeFile(path.join(projectPath, backendTestFile), backendTestContent);
         }
@@ -161,6 +166,8 @@ dist/
           await fs.writeFile(path.join(projectPath, filePath), content);
       }
   }
+
+  await formatProject(projectPath);
 }
 
 module.exports = { createPlaywrightProject };

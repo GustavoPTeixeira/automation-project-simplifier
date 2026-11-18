@@ -1,26 +1,25 @@
+const { generateEnvLoader } = require('./env-loader');
+
+// The JavaScript variant is an ES module: generated WebdriverIO JS projects are
+// "type": "module", because WebdriverIO loads spec files with native import().
 function generateWdioConfig(language){
     const isTS = language === 'typescript';
 
-     const header = isTS
+    const header = isTS
         ? `import dotenv from 'dotenv';
 import fs from 'fs';
 import type { Options } from '@wdio/types';
-const testEnv = process.env.TEST_ENV || 'local';
-const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
-dotenv.config({ path: envFile });
 `
-        : `const dotenv = require('dotenv');
-const fs = require('fs');
-const testEnv = process.env.TEST_ENV || 'local';
-const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
-dotenv.config({ path: envFile });
+        : `import dotenv from 'dotenv';
+import fs from 'fs';
 `;
 
     const exportStatement = isTS
         ? 'export const config: Options.Testrunner = {'
-        : 'exports.config = {';
+        : 'export const config = {';
 
     return `${header}
+${generateEnvLoader()}
 ${exportStatement}
   runner: 'local',
   specs: [
@@ -46,9 +45,8 @@ ${exportStatement}
     ui: 'bdd',
     timeout: 60000
   },
-  afterTest: async function (test, context, { error, result, duration, passed, retries }) {
+  afterTest: async function (test, context, { passed }) {
     if (!passed) {
-      const fs = require('fs');
       const dir = './screenshots';
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });

@@ -30,18 +30,15 @@ function generateBackendTest(language, framework) {
   
     if (framework === 'playwright') {
       return `
-  // tests/api/users.spec.${ext}
+  // tests/api/users.api.spec.${ext}
   import { test, expect } from '@playwright/test';
   import { UserService } from '../../services/UserService';
-  
-  test.describe.serial('API - Usuários', () => {
-    let userService${isTS ? ': UserService' : ''};
-  
-    test.beforeAll(async ({ request }) => {
-      userService = new UserService(request);
-    });
-  
-    test('deve buscar lista de usuários', async () => {
+
+  // The request fixture is test-scoped, so create the service inside each test:
+  // a request context taken in beforeAll is disposed before the tests use it.
+  test.describe('API - Usuários', () => {
+    test('deve buscar lista de usuários', async ({ request }) => {
+      const userService = new UserService(request);
       const response = await userService.getUsers();
       expect(response.status()).toBe(200);
       
@@ -49,7 +46,8 @@ function generateBackendTest(language, framework) {
       expect(Array.isArray(body)).toBe(true);
     });
   
-    test('deve criar um novo usuário', async () => {
+    test('deve criar um novo usuário', async ({ request }) => {
+      const userService = new UserService(request);
       const newUser = { name: 'Nero', job: 'QA' };
       const response = await userService.createUser(newUser);
       
@@ -65,7 +63,7 @@ function generateBackendTest(language, framework) {
     return `
 // tests/specs/api/users.api.${ext}
 import assert from 'node:assert';
-import { UserService } from '../../../services/UserService';
+import { UserService } from '../../../services/UserService${isTS ? '' : '.js'}';
 describe('API - Usuários', () => {
   const userService = new UserService();
   it('deve buscar lista de usuários', async () => {

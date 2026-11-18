@@ -14,6 +14,7 @@ const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } =
 const { generateDataFactory } = require('../templates/data-factory');
 const { generateMcpConfig, generateAiInstructions } = require('../templates/mcp-config');
 const { generateProjectReadme } = require('../templates/project-readme');
+const { formatProject } = require('../utils/format');
 
 async function createCypressProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider, dependencies, devDependencies } = options
@@ -99,12 +100,19 @@ export {};
     const commandsContents = (isTS ? loginTypes : '') + loginCommand;
     await fs.writeFile(path.join(projectPath, commandsFile), commandsContents);
 
+    // Base classes are the POM/SOM foundation: generated whether or not examples are included.
+    if(testTypes.includes('frontend')){
+        const basePageFile = `cypress/pages/BasePage.${isTS ? 'ts' : 'js'}`;
+        await fs.writeFile(path.join(projectPath, basePageFile), generateBasePage(language, 'cypress'));
+    }
+
+    if(testTypes.includes('backend')){
+        const baseServiceFile = `cypress/services/BaseService.${isTS ? 'ts' : 'js'}`;
+        await fs.writeFile(path.join(projectPath, baseServiceFile), generateBaseService(language, 'cypress'));
+    }
+
     if(includeExamples){
         if(testTypes.includes('frontend')){
-            const basePageFile = `cypress/pages/BasePage.${isTS ? 'ts' : 'js'}`;
-            const basePageContent = generateBasePage(language, 'cypress');
-            await fs.writeFile(path.join(projectPath, basePageFile), basePageContent);
-
             const pageObjectFile = `cypress/pages/LoginPage.${isTS ? 'ts' : 'js'}`;
             const pageObjectContent = generatePageObject(language, 'cypress');
             await fs.writeFile(path.join(projectPath, pageObjectFile), pageObjectContent);
@@ -115,10 +123,6 @@ export {};
         }
 
         if(testTypes.includes('backend')){
-            const baseServiceFile = `cypress/services/BaseService.${isTS ? 'ts' : 'js'}`;
-            const baseServiceContent = generateBaseService(language, 'cypress');
-            await fs.writeFile(path.join(projectPath, baseServiceFile), baseServiceContent);
-
             const serviceObjectFile = `cypress/services/UserService.${isTS ? 'ts' : 'js'}`;
             const serviceObjectContent = generateServiceObject(language, 'cypress');
             await fs.writeFile(path.join(projectPath, serviceObjectFile), serviceObjectContent);
@@ -171,6 +175,8 @@ dist/
             await fs.writeFile(path.join(projectPath, filePath), content);
         }
     }
+
+    await formatProject(projectPath);
 }
 
 module.exports = { createCypressProject };

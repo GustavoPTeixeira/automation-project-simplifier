@@ -1,29 +1,4 @@
-function parsePackages(input) {
-    if (!input) return {};
-    const list = Array.isArray(input) ? input : input.split(/\s+/).filter(Boolean);
-    const result = {};
-
-    for (const pkg of list) {
-        const trimmed = pkg.trim();
-        if (!trimmed) continue;
-
-        if (trimmed.startsWith('@')) {
-            const atIndex = trimmed.indexOf('@', 1);
-            if (atIndex !== -1) {
-                result[trimmed.slice(0, atIndex)] = trimmed.slice(atIndex + 1);
-            } else {
-                result[trimmed] = 'latest';
-            }
-        } else if (trimmed.includes('@')) {
-            const [name, version] = trimmed.split('@');
-            result[name] = version || 'latest';
-        } else {
-            result[trimmed] = 'latest';
-        }
-    }
-
-    return result;
-}
+const { parsePackages } = require('../utils/validation');
 
 function generatePackageJson(options){
     const { projectName, framework, language, testTypes } = options;
@@ -32,13 +7,19 @@ function generatePackageJson(options){
     const basePackage = {
         name: projectName,
         version: '1.0.0',
+        private: true,
         description: `Projeto de testes automatizados com ${framework}`,
         scripts: {},
         keywords: ['testing', 'automation', framework, 'pom', 'som'],
-        author: 'Nero James Ridder',
-        license: 'MIT',
+        author: '',
+        license: 'UNLICENSED',
         devDependencies: {}
     };
+
+    // WebdriverIO loads JS specs with native import(), which needs an ES module package.
+    if (framework === 'webdriverio' && !isTS) {
+        basePackage.type = 'module';
+    }
 
     if(framework === 'cypress'){
         basePackage.scripts = {
@@ -79,7 +60,7 @@ function generatePackageJson(options){
           };
 
           if (testTypes.includes('backend')) {
-            basePackage.scripts['test:api'] = 'playwright test tests/api';
+            basePackage.scripts['test:api'] = 'playwright test --project=api';
           }
 
           basePackage.devDependencies = {
@@ -97,7 +78,7 @@ function generatePackageJson(options){
         basePackage.scripts = {
             'wdio': `wdio run ${configFile}`,
             'test': `wdio run ${configFile}`,
-            'test:headed': `HEADED=true wdio run ${configFile}`,
+            'test:headed': `cross-env HEADED=true wdio run ${configFile}`,
         };
 
         if(testTypes.includes('frontend')) {
