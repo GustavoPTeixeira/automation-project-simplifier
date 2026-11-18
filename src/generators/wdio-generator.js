@@ -14,7 +14,7 @@ const { generateEslintConfig, generatePrettierConfig, generatePrettierIgnore } =
 const { generateDataFactory } = require('../templates/data-factory');
 const { generateMcpConfig, generateAiInstructions } = require('../templates/mcp-config');
 const { generateProjectReadme } = require('../templates/project-readme');
-
+const { formatProject } = require('../utils/format');
 
 async function createWdioProject(projectPath, options){
     const { projectName, testTypes, language, includeExamples, ciProvider, dependencies, devDependencies } = options;
@@ -78,12 +78,19 @@ async function createWdioProject(projectPath, options){
         await fs.writeJson(path.join(projectPath, 'tsconfig.json'), tsConfig, { spaces: 2 });
     }
 
+    // Base classes are the POM/SOM foundation: generated whether or not examples are included.
+    if (testTypes.includes('frontend')) {
+        const basePageFile = `pages/BasePage.${isTS ? 'ts' : 'js'}`;
+        await fs.writeFile(path.join(projectPath, basePageFile), generateBasePage(language, 'webdriverio'));
+    }
+
+    if (testTypes.includes('backend')) {
+        const baseServiceFile = `services/BaseService.${isTS ? 'ts' : 'js'}`;
+        await fs.writeFile(path.join(projectPath, baseServiceFile), generateBaseService(language, 'webdriverio'));
+    }
+
     if (includeExamples) {
         if (testTypes.includes('frontend')) {
-            const basePageFile = `pages/BasePage.${isTS ? 'ts' : 'js'}`;
-            const basePageContent = generateBasePage(language, 'webdriverio');
-            await fs.writeFile(path.join(projectPath, basePageFile), basePageContent);
-
             const pageObjectFile = `pages/LoginPage.${isTS ? 'ts' : 'js'}`;
             const pageObjectContent = generatePageObject(language, 'webdriverio');
             await fs.writeFile(path.join(projectPath, pageObjectFile), pageObjectContent);
@@ -94,10 +101,6 @@ async function createWdioProject(projectPath, options){
         }
 
         if (testTypes.includes('backend')) {
-            const baseServiceFile = `services/BaseService.${isTS ? 'ts' : 'js'}`;
-            const baseServiceContent = generateBaseService(language, 'webdriverio');
-            await fs.writeFile(path.join(projectPath, baseServiceFile), baseServiceContent);
-
             const serviceObjectFile = `services/UserService.${isTS ? 'ts' : 'js'}`;
             const serviceObjectContent = generateServiceObject(language, 'webdriverio');
             await fs.writeFile(path.join(projectPath, serviceObjectFile), serviceObjectContent);
@@ -164,6 +167,8 @@ dist/
             await fs.writeFile(path.join(projectPath, filePath), content);
         }
     }
+
+    await formatProject(projectPath);
 }
 
 module.exports = { createWdioProject };

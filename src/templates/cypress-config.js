@@ -1,7 +1,9 @@
+const { generateEnvLoader } = require('./env-loader');
+
 function generateCypressConfig(language){
     const isTS = language === 'typescript';
 
-     const body = `defineConfig({
+    const body = `defineConfig({
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
     charts: true,
@@ -18,27 +20,25 @@ function generateCypressConfig(language){
   e2e: {
     baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:3000',
     setupNodeEvents(on, config) {
-      require('cypress-mochawesome-reporter/plugin')(on);
+      ${isTS ? '// eslint-disable-next-line @typescript-eslint/no-var-requires\n      ' : ''}require('cypress-mochawesome-reporter/plugin')(on);
       return config;
     },
   },
 });
 `;
-     if (isTS) {
+    if (isTS) {
         return `import { defineConfig } from 'cypress';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
-const testEnv = process.env.TEST_ENV || 'local';
-const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
-dotenv.config({ path: envFile });
+
+${generateEnvLoader()}
 export default ${body}`;
     }
     return `const { defineConfig } = require('cypress');
 const dotenv = require('dotenv');
 const fs = require('fs');
-const testEnv = process.env.TEST_ENV || 'local';
-const envFile = fs.existsSync(\`.env.\${testEnv}\`) ? \`.env.\${testEnv}\` : '.env';
-dotenv.config({ path: envFile });
+
+${generateEnvLoader()}
 module.exports = ${body}`;
 }
 

@@ -71,7 +71,7 @@ export class UserService extends BaseService {
   if (framework === 'webdriverio') {
     return `
 // services/UserService.${isTS ? 'ts' : 'js'}
-import { BaseService } from './BaseService';
+import { BaseService } from './BaseService${isTS ? '' : '.js'}';
 
 ${isTS ? `
 export class UserService extends BaseService {

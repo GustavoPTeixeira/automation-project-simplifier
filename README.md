@@ -89,7 +89,9 @@ You will be prompted for:
 
 ### 2. 100% Non-Interactive Mode (CI / Scripting)
 
-Pass flags directly to bypass all prompts:
+Pass flags directly to bypass all prompts. When there is no interactive terminal (CI, pipes) or `--yes` is passed, the CLI never prompts: `--framework`, `--language` and `--test-types` are required, and any other option you omit uses its default (CI: `github`, examples: included, no extra dependencies).
+
+The project name becomes both the folder (created in the current directory) and the npm package name, so it must be a valid lowercase npm name, e.g. `my-tests`.
 
 ```bash
 automation-simplifier create my-tests \
@@ -114,6 +116,7 @@ automation-simplifier create my-tests \
 | `--examples` / `--no-examples` | Include or skip sample POM/SOM & test files | - |
 | `--deps <packages...>` | Custom runtime dependencies | Space-separated list (e.g. `axios lodash`) |
 | `--dev-deps <packages...>` | Custom development dependencies | Space-separated list (e.g. `allure-playwright`) |
+| `-y, --yes` | Never prompt; use defaults for omitted optional settings | - |
 
 ---
 
@@ -133,7 +136,7 @@ my-tests/
 │   └── UserService.ts          # Example API Service
 ├── tests/
 │   ├── login.spec.ts           # Frontend UI test
-│   └── api/users.spec.ts       # Backend API test
+│   └── api/users.api.spec.ts   # Backend API test (runs once, in the browserless "api" project)
 ├── .env.example                # Local environment template
 ├── .env.staging.example        # Staging environment template
 ├── .env.prod.example           # Production environment template

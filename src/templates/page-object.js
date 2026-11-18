@@ -117,7 +117,7 @@ export class LoginPage extends BasePage {
   if (framework === 'webdriverio') {
     return `
 // pages/LoginPage.${isTS ? 'ts' : 'js'}
-import { BasePage } from './BasePage';
+import { BasePage } from './BasePage${isTS ? '' : '.js'}';
 ${isTS ? `
 export class LoginPage extends BasePage {
   get usernameInput() {
