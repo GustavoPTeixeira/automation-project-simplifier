@@ -60,7 +60,7 @@ npx @nerojridder/test-framework-cli create my-automation-tests
 Or run from a local clone:
 
 ```bash
-git clone https://github.com/nerojridder/automation-project-simplifier.git
+git clone https://github.com/GustavoPTeixeira/automation-project-simplifier.git
 cd automation-project-simplifier
 npm install
 npm link

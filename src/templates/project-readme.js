@@ -10,7 +10,7 @@ function generateProjectReadme(options = {}) {
     return `# ${projectName}
 
 > Automated testing suite built with **${(framework || '').toUpperCase()}** and **${(language || '').toUpperCase()}**.
-> Scaffolded with [automation-project-simplifier](https://github.com/nerojridder/automation-project-simplifier).
+> Scaffolded with [automation-project-simplifier](https://github.com/GustavoPTeixeira/automation-project-simplifier).
 
 ---
 
